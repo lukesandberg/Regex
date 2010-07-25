@@ -1,3 +1,10 @@
-This project was designed to learn more about finite state machines and in general good c design.
+This project was designed to learn more about finite state machines 
+and in general good c design.
+
+7/25/2010
+first major bit of functionality, direct character matching and '.' 
+wildcard support.
+also an extremely simple testing framework was added along with a 
+'make test' target.
 
 -Luke Sandberg
