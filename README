@@ -1,6 +1,11 @@
 This project was designed to learn more about finite state machines 
 and in general good c design.
 
+8/16/2010
+rewrote the parser 3-4 times :)
+it seems like * and basic character classes are working, some tests are failing
+and many more tests need to be written to confirm the operation of the parser.
+
 7/25/2010
 first major bit of functionality, direct character matching and '.' 
 wildcard support.
