@@ -14,7 +14,7 @@ typedef struct fat_stack_s
 } fat_stack;
 
 
-fat_stack* fat_stack_create();
+fat_stack* fat_stack_create(size_t obj_size);
 int fat_stack_push(fat_stack* stk, void* val);
 void* fat_stack_peek(fat_stack* stk);
 void fat_stack_pop(fat_stack* stk);
