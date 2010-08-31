@@ -1,4 +1,4 @@
-#include <parser/re_lexer.h>
+#include <re_lexer.h>
 #include <stdio.h>
 //tests if c is a special char
 static inline int is_special(char c)
@@ -32,25 +32,44 @@ token read_token(lexer* l)
 {
 	int start_pos = l->pos;
 	char c = l->str[start_pos];
+	char nc = l->str[start_pos + 1];//one look ahead char
 	l->pos++;
 	token tok;
+	tok.type = INVALID_TOK;
+	tok.position = start_pos;
 	if(c != '\0')
 	{
-		tok.type = INVALID_TOK;
-		tok.position = start_pos;
 		switch(c)
 		{
 			case '*':
-				tok.type = STAR_TOK;
+				if(nc == '?')
+				{
+					l->pos++;
+					tok.type = NG_STAR_TOK;
+				}
+				else
+					tok.type = STAR_TOK;
 				break;
 			case '+':
-				tok.type = PLUS_TOK;
+				if(nc == '?')
+				{
+					l->pos++;
+					tok.type = NG_PLUS_TOK;
+				}
+				else
+					tok.type = PLUS_TOK;
+				break;
+			case '?':
+				if(nc == '?')
+				{
+					l->pos++;
+					tok.type = NG_QMARK_TOK;
+				}
+				else
+					tok.type = QMARK_TOK;
 				break;
 			case '.':
 				tok.type = WILDCARD_TOK;
-				break;
-			case '?':
-				tok.type = QMARK_TOK;
 				break;
 			case '|':
 				tok.type = ALT_TOK;
@@ -62,17 +81,16 @@ token read_token(lexer* l)
 				tok.type = RPAREN_TOK;
 				break;
 			case '\\':
-				c = l->str[l->pos];
-				l->pos++;
-				if(is_special(c))
+				l->pos++;//advance one tok
+				if(is_special(nc))
 				{//this is an escape sequence
 					tok.type = CHAR_TOK;
-					tok.v.char_value = c;
+					tok.v.char_value = nc;
 				}
 				else
 				{
 					//we need to test for character classes
-					switch(c)
+					switch(nc)
 					{
 						case 'w':
 							tok.type = ALPHA_TOK;

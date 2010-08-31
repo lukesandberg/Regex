@@ -1,6 +1,6 @@
 #include "lexer_tests.h"
 #include "minunit.h"
-#include <parser/re_lexer.h>
+#include <re_lexer.h>
 #include <stdio.h>
 
 static char* TestSimple()
@@ -28,12 +28,10 @@ static char* TestInvalid()
 static char* TestOperators()
 {
 	lexer l;
-	char* ops = "*?+|()";
+	char* ops = "*+|()?";
 	init_lexer(&l, ops);
 	token t = read_token(&l);
 	mu_assert("should be STAR", t.type == STAR_TOK);
-	t = read_token(&l);
-	mu_assert("should be QMARK", t.type == QMARK_TOK);
 	t = read_token(&l);
 	mu_assert("should be PLUS", t.type == PLUS_TOK);
 	t = read_token(&l);
@@ -42,6 +40,8 @@ static char* TestOperators()
 	mu_assert("should be LPAREN", t.type == LPAREN_TOK);
 	t = read_token(&l);
 	mu_assert("should be RPAREN", t.type == RPAREN_TOK);
+	t = read_token(&l);
+	mu_assert("should be QMARK", t.type == QMARK_TOK);
 	return NULL;
 }
 static char* TestCharClasses()
@@ -69,13 +69,13 @@ static char* TestEscapeSequences()
 	mu_assert("should be \\ value", t.v.char_value == '\\');
 	t = read_token(&l);
 	mu_assert("should be char", t.type == CHAR_TOK);
-	mu_assert("should be \\ value", t.v.char_value == '+');
+	mu_assert("should be + value", t.v.char_value == '+');
 	t = read_token(&l);
 	mu_assert("should be char", t.type == CHAR_TOK);
-	mu_assert("should be \\ value", t.v.char_value == '*');
+	mu_assert("should be * value", t.v.char_value == '*');
 	t = read_token(&l);
 	mu_assert("should be char", t.type == CHAR_TOK);
-	mu_assert("should be \\ value", t.v.char_value == '?');
+	mu_assert("should be ? value", t.v.char_value == '?');
 	t = read_token(&l);
 	mu_assert("should be INVALID", t.type == INVALID_TOK);
 	t = read_token(&l);

@@ -5,7 +5,9 @@
 #include <stdio.h>
 int match(char* re_str, char* str)
 {
-	regex* re = regex_create(re_str, NULL);
+	re_error er;
+	regex* re = regex_create(re_str, &er);
+	if(re == NULL) return 0;
 	int m = regex_matches(re, str);
 	regex_destroy(re);
 	return m;
@@ -38,6 +40,7 @@ char* TestReuseRegex()
 	mu_assert("should match", regex_matches(re, "asdf"));
 	mu_assert("should match again", regex_matches(re, "asdf"));
 	mu_assert("should not", !regex_matches(re, ""));
+	regex_destroy(re);
 	return NULL;
 }
 char* TestCharacterClass()
@@ -63,6 +66,31 @@ char* TestQMark()
 	mu_assert("qmark should not match more than once", !match("a?", "aa"));
 	return NULL;
 }
+char* TestPlus()
+{
+	mu_assert("plus should not match zero times", !match("a+", ""));
+	mu_assert("plus should match one times", match("a+", "a"));
+	mu_assert("plus shuold match many times",match("a+", "aaaaaaaaaaaaaaaaa"));
+	return NULL;
+}
+char* TestAlternation()
+{
+	mu_assert("alt basic test: match left", match("ab|cd", "ab"));
+	mu_assert("alt basic test: match right", match("ab|cd", "cd"));
+	mu_assert("alt sanity check", !match("ab|cd", "ad"));
+	return NULL;
+}
+char* TestSubExpression()
+{
+	mu_assert("basic sub expression", match("a(bc)d", "abcd"));
+	mu_assert("repeated group", match("(ab)*", "ababab"));
+	mu_assert("nested groups", match("(ab(cd)*ef)+", "abcdcdefabcdcdcdef"));
+	mu_assert("sub alternation 1", match("a(b|c)d", "acd"));
+	mu_assert("sub alternation 2", match("a(b|c)d", "abd"));
+	return NULL;
+}
+
+
 void  test_matcher(int argc, char**argv)
 {
 	printf("Testing Matcher\n");
@@ -73,4 +101,7 @@ void  test_matcher(int argc, char**argv)
 	mu_run_test(TestCharacterClass);
 	mu_run_test(TestStar);
 	mu_run_test(TestQMark);
+	mu_run_test(TestPlus);
+	mu_run_test(TestAlternation);
+	mu_run_test(TestSubExpression);
 }

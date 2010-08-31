@@ -4,25 +4,35 @@
 
 typedef enum
 {
-	I_RULE,
+	I_CHAR,
+	I_WILDCARD,
+	I_ALPHA,
+	I_DIGIT,
+	I_WHITESPACE,
 	I_JMP,
 	I_SPLIT,
 	I_MATCH
 }op_code;
 
-typedef struct
+typedef struct _inst_s
 {
 	op_code op;
 	union
 	{
-		unsigned int rule;
-		unsigned int jump;
+		char c;
+		struct _inst_s* jump;
 		struct
 		{
-			unsigned int left;
-			unsigned int right;
+			struct _inst_s* left;
+			struct _inst_s* right;
 		}split;
 	} v;
+	void* tag;
+	//space to hold a value for additional data needed by the runtime
+	//this kind of violates the standard vm abstraction
+	//because we expect this member to be modified at runtime
+	//but generally breaking an abstraction to switch from O(N) to O(1) is
+	//worth it
 } instruction;
 
 typedef struct
@@ -31,6 +41,8 @@ typedef struct
 	instruction code[];
 }program;
 
+void print_program(program* prog);
+void print_instruction(instruction *pc, size_t index);
 
 
 

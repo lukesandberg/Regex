@@ -16,6 +16,9 @@ typedef enum
 	ALPHA_TOK,//\w
 	LPAREN_TOK,//(
 	RPAREN_TOK,//)
+	NG_STAR_TOK,//*?
+	NG_PLUS_TOK,//+?
+	NG_QMARK_TOK,//??
 } token_type;
 
 typedef struct

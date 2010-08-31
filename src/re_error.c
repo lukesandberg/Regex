@@ -9,6 +9,7 @@ static const char *error_messages[NUM_ERROR_CODES] =
 	"unmatched paren",
 	"expected a token",
 	"missing operator argument",
+	"system out of memory",
 	"unknown token"
 };
 static const char* unknown_error_msg = "unknown error code";

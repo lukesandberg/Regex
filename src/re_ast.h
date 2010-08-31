@@ -1,22 +1,23 @@
 #ifndef __RE_AST_H__
 #define __RE_AST_H__
 
-typedef enum
-{
-	RWILDCARD = 256,
-	RWHITESPACE = 257,
-	RALPHA = 258,
-	RDIGIT = 259
-} char_rule;
+#include <util/linked_list.h>
 
 typedef enum
 {
 	CONCAT,
-	STAR,
 	ALT,
+	STAR,
 	QMARK,
 	PLUS,
-	MATCH,
+	NG_STAR,
+	NG_QMARK,
+	NG_PLUS,
+	CHAR,
+	WILDCARD,
+	WHITESPACE,
+	ALPHA,
+	DIGIT,
 	EMPTY
 } node_type;
 
@@ -29,8 +30,8 @@ typedef struct
 typedef struct
 {
 	ast_node base;
-	char_rule rule;
-} rule_node;
+	char c;
+} char_node;
 
 typedef struct
 {
@@ -45,10 +46,17 @@ typedef struct
 	ast_node *right;
 } binary_node;
 
+typedef struct
+{
+	ast_node base;
+	linked_list* list;
+} multi_node;
+
 void free_node(ast_node* n);
-ast_node* make_empty();
+ast_node* make_node(node_type t);
 unary_node* make_unary(ast_node* sub, node_type t);
-rule_node* make_rule(char_rule rl);
+char_node* make_char(char c);
 binary_node* make_binary(ast_node* left, ast_node* right, node_type t);
+multi_node* make_multi(node_type t);
 
 #endif

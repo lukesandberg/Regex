@@ -4,22 +4,10 @@
 #include "fat_stack.h"
 #include "util.h"
 
-typedef struct list_entry_s
-{
-	struct list_entry_s* next;
-	unsigned char val[];
-} list_entry;
-
-struct fat_stack_s
-{
-	size_t obj_size;
-	list_entry* top;
-	unsigned int entries;
-};
-
 fat_stack* fat_stack_create(size_t obj_size)
 {
-	fat_stack* stk = (fat_stack*) checked_malloc(sizeof(fat_stack));
+	fat_stack* stk = (fat_stack*) malloc(sizeof(fat_stack));
+	if(stk == NULL) return NULL;
 	stk->obj_size = obj_size;
 	stk->top = NULL;
 	stk->entries = 0;
@@ -34,18 +22,21 @@ int fat_stack_size(fat_stack* stk)
 	return stk->entries;
 }
 
-void fat_stack_push(fat_stack* stk, void* val)
+int fat_stack_push(fat_stack* stk, void* val)
 {
-	list_entry* entry = (list_entry*) checked_malloc(sizeof(list_entry) + stk->obj_size);
+	fat_stack_entry* entry = (fat_stack_entry*) malloc(sizeof(fat_stack_entry) + stk->obj_size);
+	if(entry == NULL)
+		return 0;
 	entry->next=stk->top;
 	memcpy(&(entry->val[0]), val, stk->obj_size);
 	stk->top = entry;
 	stk->entries++;
+	return 1;
 }
 
 void fat_stack_pop(fat_stack* stk)
 {
-	list_entry* tmp = stk->top;
+	fat_stack_entry* tmp = stk->top;
 	stk->top = tmp->next;
 	stk->entries--;
 	free(tmp);
@@ -57,5 +48,5 @@ void* fat_stack_peek(fat_stack* stk)
 void fat_stack_destroy(fat_stack* stk)
 {
 	while(stk->entries > 0) fat_stack_pop(stk);
-	checked_free(stk);
+	free(stk);
 }
