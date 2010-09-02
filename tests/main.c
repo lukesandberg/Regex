@@ -3,28 +3,11 @@
 #include "parser_tests.h"
 #include "matcher_tests.h"
 #include "compiler_tests.h"
+#include "perf_tests.h"
+#include "fuzz_tests.h"
 #define _GNU_SOURCE
 #include <stdio.h>
-#include <regex.h>
 #include <stdlib.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <string.h>
-#include "perf_tests.h"
-#include <unistd.h>
-#define MAX_RANDOM_STRING 10000
-char* rand_string()
-{
-	int len = random()%MAX_RANDOM_STRING + 1;
-	char* str = (char*) malloc(len +1);
-	for(int i = 0; i<len;i++)
-	{
-		str[i] =random()%128;// chars[random()%cl];
-	}
-	str[len] = '\0';
-	return str;
-}
-
 
 int main(int argc, char**argv)
 {
@@ -47,31 +30,14 @@ int main(int argc, char**argv)
 		int m = match(re, str);
 		printf("%s matches %s:\t%s\n", str, re, m?"true": "false"); 
 	}
-	else if(argc == 2 && argv[1][0] == 'f')//fuzz
+	else if(argc >= 2 && argv[1][0] == 'f')//fuzz
 	{
-		unsigned long count = 0;
-		unsigned long fail = 0;
-		while(1)
+		unsigned int count = 0;
+		if(argc == 3)
 		{
-			char* re = rand_string();
-			char* m = rand_string();
-			char* command;
-			asprintf(&command, "%s r \"%s\" \"%s\" >  /dev/null", argv[0], re, m);
-			//we execute in a sub proc 
-			count++;
-			int ret = system(command);
-			if(WEXITSTATUS(ret) != 0)
-			{
-				fail++;
-				printf("%s returned %i\n", command, WEXITSTATUS(ret));
-			}
-			free(command);
-			free(re);
-			free(m);
-			if(WIFSIGNALED(ret) && (WTERMSIG(ret) == SIGINT || WTERMSIG(ret) == SIGQUIT))
-				break;
+			count = (unsigned int) atoll(argv[2]);
 		}
-		printf("%li out of %li failed\n", fail, count);
+		fuzz_test(count);
 	}
 	else
 	{

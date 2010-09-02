@@ -55,25 +55,62 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../tests/compiler_tests.o: /usr/include/_G_config.h /usr/include/wchar.h
 ../tests/compiler_tests.o: /usr/include/bits/stdio_lim.h
 ../tests/compiler_tests.o: /usr/include/bits/sys_errlist.h
+../tests/fuzz_tests.o: ../tests/fuzz_tests.h /usr/include/stdio.h
+../tests/fuzz_tests.o: /usr/include/features.h /usr/include/bits/predefs.h
+../tests/fuzz_tests.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+../tests/fuzz_tests.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
+../tests/fuzz_tests.o: /usr/include/bits/types.h
+../tests/fuzz_tests.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+../tests/fuzz_tests.o: /usr/include/_G_config.h /usr/include/wchar.h
+../tests/fuzz_tests.o: /usr/include/bits/stdio_lim.h
+../tests/fuzz_tests.o: /usr/include/bits/sys_errlist.h /usr/include/stdlib.h
+../tests/fuzz_tests.o: /usr/include/sys/types.h /usr/include/time.h
+../tests/fuzz_tests.o: /usr/include/endian.h /usr/include/bits/endian.h
+../tests/fuzz_tests.o: /usr/include/bits/byteswap.h /usr/include/sys/select.h
+../tests/fuzz_tests.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+../tests/fuzz_tests.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+../tests/fuzz_tests.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+../tests/fuzz_tests.o: /usr/include/signal.h /usr/include/bits/signum.h
+../tests/fuzz_tests.o: /usr/include/bits/siginfo.h
+../tests/fuzz_tests.o: /usr/include/bits/sigaction.h
+../tests/fuzz_tests.o: /usr/include/bits/sigcontext.h
+../tests/fuzz_tests.o: /usr/include/bits/sigstack.h
+../tests/fuzz_tests.o: /usr/include/bits/sigthread.h /usr/include/sys/wait.h
+../tests/fuzz_tests.o: /usr/include/sys/resource.h
+../tests/fuzz_tests.o: /usr/include/bits/resource.h
+../tests/fuzz_tests.o: /usr/include/bits/waitflags.h
+../tests/fuzz_tests.o: /usr/include/bits/waitstatus.h /usr/include/string.h
+../tests/fuzz_tests.o: /usr/include/xlocale.h /usr/include/unistd.h
+../tests/fuzz_tests.o: /usr/include/bits/posix_opt.h
+../tests/fuzz_tests.o: /usr/include/bits/confname.h /usr/include/getopt.h
+../tests/fuzz_tests.o: ../tests/matcher_tests.h
 ../tests/lexer_tests.o: ../tests/lexer_tests.h ../tests/minunit.h
-../tests/lexer_tests.o: /usr/include/stdio.h /usr/include/features.h
-../tests/lexer_tests.o: /usr/include/bits/predefs.h /usr/include/sys/cdefs.h
-../tests/lexer_tests.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-../tests/lexer_tests.o: /usr/include/gnu/stubs-32.h /usr/include/bits/types.h
+../tests/lexer_tests.o: ../src/re_lexer.h /usr/include/stdio.h
+../tests/lexer_tests.o: /usr/include/features.h /usr/include/bits/predefs.h
+../tests/lexer_tests.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+../tests/lexer_tests.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
+../tests/lexer_tests.o: /usr/include/bits/types.h
 ../tests/lexer_tests.o: /usr/include/bits/typesizes.h /usr/include/libio.h
 ../tests/lexer_tests.o: /usr/include/_G_config.h /usr/include/wchar.h
 ../tests/lexer_tests.o: /usr/include/bits/stdio_lim.h
 ../tests/lexer_tests.o: /usr/include/bits/sys_errlist.h
 ../tests/main.o: ../tests/minunit.h ../tests/lexer_tests.h
 ../tests/main.o: ../tests/parser_tests.h ../tests/matcher_tests.h
-../tests/main.o: ../tests/compiler_tests.h /usr/include/stdio.h
+../tests/main.o: ../tests/compiler_tests.h ../tests/perf_tests.h
+../tests/main.o: ../tests/fuzz_tests.h /usr/include/stdio.h
 ../tests/main.o: /usr/include/features.h /usr/include/bits/predefs.h
 ../tests/main.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
 ../tests/main.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
 ../tests/main.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
 ../tests/main.o: /usr/include/libio.h /usr/include/_G_config.h
 ../tests/main.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
-../tests/main.o: /usr/include/bits/sys_errlist.h ../tests/perf_tests.h
+../tests/main.o: /usr/include/bits/sys_errlist.h /usr/include/stdlib.h
+../tests/main.o: /usr/include/sys/types.h /usr/include/time.h
+../tests/main.o: /usr/include/endian.h /usr/include/bits/endian.h
+../tests/main.o: /usr/include/bits/byteswap.h /usr/include/sys/select.h
+../tests/main.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+../tests/main.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+../tests/main.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
 ../tests/matcher_tests.o: ../tests/matcher_tests.h ../tests/minunit.h
 ../tests/matcher_tests.o: ../src/regex.h ../src/re_error.h
 ../tests/matcher_tests.o: /usr/include/stdlib.h /usr/include/features.h
@@ -111,6 +148,8 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../tests/minunit.o: /usr/include/bits/stdio_lim.h
 ../tests/minunit.o: /usr/include/bits/sys_errlist.h
 ../tests/parser_tests.o: ../tests/parser_tests.h ../tests/minunit.h
+../tests/parser_tests.o: ../src/re_parser.h ../src/re_ast.h
+../tests/parser_tests.o: ../src/util/linked_list.h ../src/re_error.h
 ../tests/parser_tests.o: /usr/include/stdio.h /usr/include/features.h
 ../tests/parser_tests.o: /usr/include/bits/predefs.h /usr/include/sys/cdefs.h
 ../tests/parser_tests.o: /usr/include/bits/wordsize.h
@@ -190,13 +229,13 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../src/regex.o: /usr/include/libio.h /usr/include/_G_config.h
 ../src/regex.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
 ../src/regex.o: /usr/include/bits/sys_errlist.h
-../src/re_lexer.o: /usr/include/stdio.h /usr/include/features.h
-../src/re_lexer.o: /usr/include/bits/predefs.h /usr/include/sys/cdefs.h
-../src/re_lexer.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-../src/re_lexer.o: /usr/include/gnu/stubs-32.h /usr/include/bits/types.h
-../src/re_lexer.o: /usr/include/bits/typesizes.h /usr/include/libio.h
-../src/re_lexer.o: /usr/include/_G_config.h /usr/include/wchar.h
-../src/re_lexer.o: /usr/include/bits/stdio_lim.h
+../src/re_lexer.o: ../src/re_lexer.h /usr/include/stdio.h
+../src/re_lexer.o: /usr/include/features.h /usr/include/bits/predefs.h
+../src/re_lexer.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+../src/re_lexer.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
+../src/re_lexer.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
+../src/re_lexer.o: /usr/include/libio.h /usr/include/_G_config.h
+../src/re_lexer.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
 ../src/re_lexer.o: /usr/include/bits/sys_errlist.h
 ../src/re_parser.o: ../src/re_parser.h ../src/re_ast.h
 ../src/re_parser.o: ../src/util/linked_list.h ../src/re_error.h
