@@ -6,49 +6,81 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
-typedef struct thread_list_s thread_list;
+
+struct regex_s
+{
+	char* src;
+	size_t num_registers;
+	program *prog;
+};
 
 typedef struct
 {
 	instruction *pc;
+	char* save_regs[];
 } thread_t;
 
-struct thread_list_s
+typedef struct 
 {
 	size_t size;
 	size_t cap;
-	thread_t threads[];
+	thread_t* threads[];
+} thread_list;
+
+struct re_run_state
+{
+	thread_list *cache;
+	regex* re;
 };
 
 static thread_list* make_list(size_t sz)
 {
-	thread_list* lst = (thread_list*) malloc(sizeof(thread_list) + sizeof(thread_t) *sz);
+	thread_list* lst = (thread_list*) malloc(sizeof(thread_list) + sizeof(thread_t*) * sz);
 	if(lst == NULL) return NULL;
 	lst->size = 0;
 	lst->cap = sz;
 	return lst;
 }
-static inline thread_t thread(instruction* pc)
+
+static thread_t* thread(struct re_run_state *state, instruction* pc, char** regs)
 {
-	return (thread_t) {.pc = pc};
+	size_t regsz = state->re->num_registers * sizeof(char*);
+	thread_t* rval = NULL;
+	if(state->cache->size > 0)
+	{
+		state->cache->size--;
+		rval = state->cache->threads[state->cache->size]
+	}
+	else
+	{
+		rval = (thread_t*) malloc(sizeof(thread_t) + regsz);
+		if(rval == NULL) return NULL;
+	}
+	rval->pc = pc;
+	memcpy(&(rval->save_regs[0]), regs, regsz);
+	return rval;
 }
 
-static inline void add_to_list(thread_list* l, thread_t t, void* v)
+static inline void add_to_list(struct re_run_state *state, thread_list* l, thread_t* t, char* v)
 {
 tailcall:
-	if(t.pc->tag != v)
+	if(t->pc->tag != v)
 	{
 		l->threads[l->size] = t;
 		l->size++;
-		t.pc->tag = v;
-		switch(t.pc->op)
+		t->pc->tag = v;
+		switch(t->pc->op)
 		{
 			case I_JMP:
-				t = thread(t.pc->v.jump);
+				t = thread(state, t.pc->v.jump, &(t->save_regs[0]));
 				goto tailcall;
 			case I_SPLIT:
-				add_to_list(l, thread(t.pc->v.split.left), v);
-				t = thread(t.pc->v.split.right);
+				add_to_list(l, thread(state, t.pc->v.split.left, &(t->save_regs[0])), v);
+				t = thread(state, t.pc->v.split.right, &(t->save_regs[0]));
+				goto tailcall;
+			case I_SAVE:
+				t->save_regs[t->pc->v.save_register] = v;
+				t= thread(state, t->pc + 1, &(t->save_regs[0]));
 				goto tailcall;
 			case I_CHAR:
 			case I_WHITESPACE:
@@ -56,23 +88,22 @@ tailcall:
 			case I_ALPHA:
 			case I_DIGIT:
 			case I_MATCH:
+				//fallthrough, we could just give an empty default case
+				//but this will give us warnings if we add new instructions
+				//to make sure it is properly handled here
 				;
 		}
 	}
 }
 
-struct regex_s
-{
-	char* src;
-	program *prog;
-};
 
 regex* regex_create(char* re_str, re_error* er)
 {
-	program *prog = compile_regex(re_str, er);
+	size_t num_regs;
+	program *prog = compile_regex(re_str, er, &num_regs);
 	if(prog == NULL) 
 		return NULL;
-	regex * re = (regex*) malloc(sizeof(regex));
+	regex * re = (regex*) malloc(sizeof(regex) + (num_regs * sizeof(char*)));
 	if(re == NULL)
 	{
 		if(er != NULL)
@@ -83,6 +114,7 @@ regex* regex_create(char* re_str, re_error* er)
 		free(prog);
 		return NULL;
 	}
+	re->num_registers = num_regs;
 	re->src = re_str;
 	re->prog = prog;
 	return re;
@@ -106,18 +138,28 @@ static inline void reset_regex(regex* re)
 int regex_matches(regex* re, char*str)
 {
 	program *prog = re->prog;
-	instruction* code = &(prog->code[0]);
 	size_t len = prog->size;
+	struct re_run_state state;
+	state.re = re;
+	state.cache = make_list(len);
+	if(state.cache == NULL)
+		return -1;
+	instruction* code = &(prog->code[0]);
 	thread_list *clst, *nlst;
 	clst = make_list(len);
 	if(clst == NULL)
+	{
+		free(state.cache);
 		return -1;
+	}
 	nlst = make_list(len);
 	if(nlst == NULL)
 	{
+		free(state.cache);
 		free(clst);
 		return -1;
 	}
+
 	char* c = str;
 	int rval;
 	add_to_list(clst, thread(code),c);
@@ -126,7 +168,7 @@ int regex_matches(regex* re, char*str)
 		rval = 0;
 		for(int ti = 0; ti < clst->size; ti++)
 		{
-			instruction* pc = clst->threads[ti].pc;
+			instruction* pc = clst->threads[ti]->pc;
 			switch(pc->op)
 			{
 				case I_CHAR:

@@ -11,7 +11,8 @@ typedef enum
 	I_WHITESPACE,
 	I_JMP,
 	I_SPLIT,
-	I_MATCH
+	I_MATCH,
+	I_SAVE
 }op_code;
 
 typedef struct _inst_s
@@ -20,6 +21,7 @@ typedef struct _inst_s
 	union
 	{
 		char c;
+		size_t save_register;
 		struct _inst_s* jump;
 		struct
 		{

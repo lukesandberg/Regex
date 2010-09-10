@@ -50,6 +50,7 @@ void free_node(ast_node* n)
 		case NG_QMARK:
 		case NG_PLUS:
 		case NG_STAR:
+		case CAPTURE:
 			;//to avoid the gcc declarations after labels issue
 			unary_node* sn = (unary_node*) n;
 			if(sn->expr != NULL) free_node(sn->expr);

@@ -18,7 +18,8 @@ typedef enum
 	WHITESPACE,
 	ALPHA,
 	DIGIT,
-	EMPTY
+	EMPTY,
+	CAPTURE
 } node_type;
 
 /*simple 'base' struct*/
