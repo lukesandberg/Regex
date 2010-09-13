@@ -1,8 +1,27 @@
 This project was designed to learn more about finite state machines 
 and in general good c design.
 
+9/12/2010
+captures are fully implemented and working, they (as with everything) need more
+tests.  Copious interactive testing (via ./testre c...) so i feel pretty good 
+about it.  At this point the major pieces to add would be counted repetitions
+(e.g. e{n,m}).  im not sure what the best way to do this would be.  we could
+associate additional information with a thread so it could track the 
+number of outstanding repetitions.  but we might need to store a large number
+of repetition counters concurrently, so how do we bound the registers to hold 
+it?
+
+you only need the number of iteration indices as the deepest nesting of counted
+rep expressions.  so it would likely be a small number per thread, plus we could
+calculate it during compilation (just like we count capture regs).  This would
+add extra copying and allocation overhead to our execution engine. (extra calls to
+memcpy).  but maybe by just having a generic register array (either char or ins ptrs)
+we could minimize additional overhead at the expense of a little type safety.
+
+
 9/1/2010
-lots of tests added, playing around with fuzz testings (sending random data to the engine to try to crash it).  
+lots of tests added, playing around with fuzz testings (sending random data to
+the engine to try to crash it).  
 
 8/16/2010
 rewrote the parser 3-4 times :)
