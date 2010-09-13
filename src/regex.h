@@ -1,5 +1,6 @@
 #ifndef __REGEX_H__
 #define __REGEX_H__
+
 #include <re_error.h>
 
 typedef struct regex_s regex;
@@ -9,6 +10,6 @@ void regex_destroy(regex* re);
 //1 means it matched
 //0 means it didnt match
 //-1 means an error ocurred (usually an OOM)
-int regex_matches(regex* re, char *str);
+int regex_matches(regex* re, char *str,char** regs);
 
 #endif

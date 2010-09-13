@@ -15,7 +15,7 @@ static const char *error_messages[NUM_ERROR_CODES] =
 static const char* unknown_error_msg = "unknown error code";
 const char* re_error_description(re_error er)
 {
-	if(er.errno < 0 || er.errno >= NUM_ERROR_CODES)
+	if(er.errno >= NUM_ERROR_CODES)
 		return unknown_error_msg;
 	return error_messages[er.errno];
 }

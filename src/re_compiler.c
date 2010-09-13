@@ -3,8 +3,7 @@
 #include <util/util.h>
 
 #include <stdlib.h>
-#include <assert.h>
-
+#include <string.h>
 struct compile_state
 {
 	instruction* inst;
@@ -70,15 +69,15 @@ static inline void compile_capture(struct compile_state *state, unary_node* n)
 	instruction* save_1 = state->inst;
 	save_1->op = I_SAVE;
 	save_1->v.save_register = state->next_save_reg;
-	state->next_save_reg++;
-	state->inst++;	
+	state->next_save_reg += 2;
+	size_t nsr = state->next_save_reg -1;//we need to save it now in case ther are nested captures
+	state->inst++;
 	
 	compile_recursive(state, n->expr);
 
 	instruction* save_2 = state->inst;
 	save_2->op = I_SAVE;
-	save_2->v.save_register = state->next_save_reg;
-	state->next_save_reg++;
+	save_2->v.save_register = nsr;
 	state->inst++;	
 }
 
@@ -273,7 +272,7 @@ program* compile_regex(char* str, re_error* error, size_t *num_save_regs)
 
 	size_t sz = program_size(tree) + 1;//we add one for the final match inst
 
-	program* prog = malloc(sizeof(program) + sz*sizeof(instruction));
+	program* prog = malloc(sizeof(program) + sz * sizeof(instruction));
 	if(prog == NULL)
 	{
 		if(error != NULL)
@@ -288,9 +287,10 @@ program* compile_regex(char* str, re_error* error, size_t *num_save_regs)
 	struct compile_state state;
 	state.inst = &(prog->code[0]);
 	state.next_save_reg = 0;
+	memset(state.inst, 0, sz * sizeof(instruction));
 
 	compile_recursive(&state, tree);
-	state.inst->op = I_MATCH;//last instruction
+	compile_op(&state, I_MATCH);//last instruction should always be a match
 	*num_save_regs = state.next_save_reg;
 end:
 	free_node(tree);

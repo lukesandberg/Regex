@@ -3,12 +3,13 @@
 #include <regex.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 int match(char* re_str, char* str)
 {
 	re_error er;
 	regex* re = regex_create(re_str, &er);
 	if(re == NULL) return 0;
-	int m = regex_matches(re, str);
+	int m = regex_matches(re, str, NULL);
 	regex_destroy(re);
 	return m;
 }
@@ -37,9 +38,9 @@ char* TestEmptyRegex()
 char* TestReuseRegex()
 {
 	regex* re = regex_create("asd.", NULL);
-	mu_assert("should match", regex_matches(re, "asdf"));
-	mu_assert("should match again", regex_matches(re, "asdf"));
-	mu_assert("should not", !regex_matches(re, ""));
+	mu_assert("should match", regex_matches(re, "asdf", NULL));
+	mu_assert("should match again", regex_matches(re, "asdf", NULL));
+	mu_assert("should not", !regex_matches(re, "", NULL));
 	regex_destroy(re);
 	return NULL;
 }
@@ -91,7 +92,7 @@ char* TestSubExpression()
 }
 
 
-void  test_matcher(int argc, char**argv)
+void  test_matcher()
 {
 	printf("Testing Matcher\n");
 	mu_run_test(TestEmptyRegex);

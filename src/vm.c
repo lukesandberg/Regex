@@ -5,6 +5,9 @@ void print_instruction(instruction *pc, size_t ind )
 {
 	switch(pc->op)
 	{
+		case I_SAVE:
+			printf("CHAR: %c", pc->v.save_register);
+			break;
 		case I_CHAR:
 			printf("CHAR: %c", pc->v.c);
 			break;

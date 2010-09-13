@@ -50,7 +50,7 @@ char* acat(char* left, char* right)
 
 char* TestLongExp()
 {
-	size_t rep = 100000;
+	size_t rep = 10000;
 	char* l = repeat("a?", rep);
 	char* r = repeat("a", rep);
 
@@ -58,7 +58,7 @@ char* TestLongExp()
 	free(l);
 	regex* re = regex_create(re_str, NULL);
 	start_timer();
-	regex_matches(re, r);
+	regex_matches(re, r, NULL);
 	
 	char* time = stop_and_print_timer();
 	printf("Long (a?)^%i(a)^%i:\t%s\n", rep, rep, time);

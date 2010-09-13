@@ -5,7 +5,7 @@
 
 #define CRASH_MACRO (*((int*)0))++;
 #define NEW(type) ((type*) checked_malloc(sizeof(type)))
-// #define DEBUG
+#define DEBUG
 typedef enum
 {
 	TRACE,

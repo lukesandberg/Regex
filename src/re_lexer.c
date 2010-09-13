@@ -32,13 +32,13 @@ token read_token(lexer* l)
 {
 	int start_pos = l->pos;
 	char c = l->str[start_pos];
-	char nc = l->str[start_pos + 1];//one look ahead char
 	l->pos++;
 	token tok;
 	tok.type = INVALID_TOK;
 	tok.position = start_pos;
 	if(c != '\0')
 	{
+		char nc = l->str[start_pos + 1];//one look ahead char
 		switch(c)
 		{
 			case '*':

@@ -139,6 +139,7 @@ static ast_node* parse_basic_re(fat_stack* tok_stk, re_error *er)
 			unary_type = NG_QMARK;
 			break;
 		case RPAREN_TOK:
+			;
 			ast_node* reg = handle_group(tok_stk, er);
 			if(reg == NULL)
 				return NULL;
@@ -148,7 +149,7 @@ static ast_node* parse_basic_re(fat_stack* tok_stk, re_error *er)
 				parse_error(E_OUT_OF_MEMORY, -1);
 				return NULL;
 			}
-			return capture;
+			return (ast_node*) capture;
 		default:
 			//error
 			parse_error(E_UNEXPECTED_TOKEN, tok.position);

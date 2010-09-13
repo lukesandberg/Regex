@@ -9,7 +9,7 @@ OBJECTS=$(SRCS:.c=.o)
 LIBOBJECTS=$(LIBSRCS:.c=.o)
 
 CC =gcc -std=c99
-CFLAGS =-Wall -Werror -pedantic -g  $(INCLUDES)
+CFLAGS =-Wall -Wextra -Werror -O3 $(INCLUDES)
 
 
 $(TARGET): lib $(OBJECTS)
@@ -32,6 +32,27 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 
 # DO NOT DELETE
 
+../tests/capture_tests.o: ../tests/matcher_tests.h ../tests/minunit.h
+../tests/capture_tests.o: ../src/regex.h ../src/re_error.h
+../tests/capture_tests.o: /usr/include/stdlib.h /usr/include/features.h
+../tests/capture_tests.o: /usr/include/bits/predefs.h
+../tests/capture_tests.o: /usr/include/sys/cdefs.h
+../tests/capture_tests.o: /usr/include/bits/wordsize.h
+../tests/capture_tests.o: /usr/include/gnu/stubs.h
+../tests/capture_tests.o: /usr/include/gnu/stubs-32.h
+../tests/capture_tests.o: /usr/include/sys/types.h /usr/include/bits/types.h
+../tests/capture_tests.o: /usr/include/bits/typesizes.h /usr/include/time.h
+../tests/capture_tests.o: /usr/include/endian.h /usr/include/bits/endian.h
+../tests/capture_tests.o: /usr/include/bits/byteswap.h
+../tests/capture_tests.o: /usr/include/sys/select.h
+../tests/capture_tests.o: /usr/include/bits/select.h
+../tests/capture_tests.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
+../tests/capture_tests.o: /usr/include/sys/sysmacros.h
+../tests/capture_tests.o: /usr/include/bits/pthreadtypes.h
+../tests/capture_tests.o: /usr/include/alloca.h /usr/include/stdio.h
+../tests/capture_tests.o: /usr/include/libio.h /usr/include/_G_config.h
+../tests/capture_tests.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
+../tests/capture_tests.o: /usr/include/bits/sys_errlist.h
 ../tests/compiler_tests.o: ../tests/compiler_tests.h ../tests/minunit.h
 ../tests/compiler_tests.o: ../src/re_compiler.h ../src/vm.h
 ../tests/compiler_tests.o: /usr/include/stdlib.h /usr/include/features.h
@@ -203,7 +224,7 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../src/re_compiler.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
 ../src/re_compiler.o: ../src/re_error.h ../src/re_parser.h ../src/re_ast.h
 ../src/re_compiler.o: ../src/util/linked_list.h ../src/util/util.h
-../src/re_compiler.o: /usr/include/assert.h
+../src/re_compiler.o: /usr/include/string.h /usr/include/xlocale.h
 ../src/re_error.o: ../src/re_error.h /usr/include/stdio.h
 ../src/re_error.o: /usr/include/features.h /usr/include/bits/predefs.h
 ../src/re_error.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
@@ -228,7 +249,7 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../src/regex.o: /usr/include/xlocale.h /usr/include/stdio.h
 ../src/regex.o: /usr/include/libio.h /usr/include/_G_config.h
 ../src/regex.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
-../src/regex.o: /usr/include/bits/sys_errlist.h
+../src/regex.o: /usr/include/bits/sys_errlist.h /usr/include/string.h
 ../src/re_lexer.o: ../src/re_lexer.h /usr/include/stdio.h
 ../src/re_lexer.o: /usr/include/features.h /usr/include/bits/predefs.h
 ../src/re_lexer.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
