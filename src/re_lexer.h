@@ -19,6 +19,10 @@ typedef enum
 	NG_STAR_TOK,//*?
 	NG_PLUS_TOK,//+?
 	NG_QMARK_TOK,//??
+	LCR_TOK,//{
+	RCR_TOK,//}
+	COMMA_TOK,//, only a special tok inside {}'s
+	NUM_TOK,//a number only inside {}'s
 } token_type;
 
 typedef struct
@@ -27,7 +31,8 @@ typedef struct
 	unsigned int position;
 	union
 	{
-		char char_value;	
+		char char_value;
+		unsigned int num_value;	
 	} v;
 } token;
 
@@ -35,6 +40,7 @@ typedef struct
 typedef struct
 {
 	char* str;
+	int in_cr;
 	int pos;
 } lexer;
 

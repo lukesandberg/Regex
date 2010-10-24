@@ -23,6 +23,8 @@ basic-re:
 	  basic-re STAR
 	| basic-re PLUS
 	| basic-re QMARK
+	| basic-re LCR_TOK num RCR_TOK
+	| basic-re LCR_TOK num1, num2 RCR_TOK
 	| (reg)
 	| CHAR		
 
@@ -95,6 +97,41 @@ static ast_node* handle_group(fat_stack* tok_stk, re_error *er)
 	fat_stack_destroy(sub_stk);
 	return sub;
 }
+static ast_node* parse_counted_rep(fat_stack* tok_stk, re_error*er)
+{
+	//we have already popped off the '}' now read 1 or 2 nums possible 
+	//separated by a , and return a loop_node
+	int done = 0;
+	unsigned int min;
+	unsigned int max;
+	int digit = 0;
+	while(!done)
+	{
+		if(fat_stack_size(tok_stk) == 0)
+		{
+			parse_error(E_EXPECTED_TOKEN, -1);
+			return NULL;
+		}
+		token* tokptr = (token*) fat_stack_peek(tok_stk);
+		token tok = *tokptr;//copy to local mem
+		fat_stack_pop(tok_stk);
+		if(tok.type == CHAR_TOK)
+		{
+			char c = tok.v.char_value;
+			if(!isspace(c) && !isdigit(c))
+			{
+				parse_error(E_UNEXPECTED_CHAR, tok.position);
+				return NULL;
+			}
+			//
+		}
+		else
+		{
+			parse_error(E_INVALID_TOKEN, tok.position);
+			return NULL;
+		}
+	}
+}
 
 static ast_node* parse_basic_re(fat_stack* tok_stk, re_error *er)
 {
@@ -138,6 +175,10 @@ static ast_node* parse_basic_re(fat_stack* tok_stk, re_error *er)
 		case NG_QMARK_TOK:
 			unary_type = NG_QMARK;
 			break;
+		case RCR_TOK:
+			//this is a special case because we now have some
+			//special stuff to parse
+			return parse_counted_rep(tok_stk, er);
 		case RPAREN_TOK:
 			;
 			ast_node* reg = handle_group(tok_stk, er);

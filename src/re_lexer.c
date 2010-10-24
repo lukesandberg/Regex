@@ -10,20 +10,18 @@ static inline int is_special(char c)
 		|| c == '?'
 		|| c == '.'
 		|| c == '('
-		|| c == ')';
+		|| c == ')'
+		|| c == '{'
+		|| c == '}';
 }
-
-struct lexer_s
-{
-	char* str;
-	int pos;
-};
 
 void init_lexer(lexer* l, char* str)
 {
 	l->str = str;
 	l->pos = 0;
+	l->in_cr = 0;
 }
+
 void unread_token(lexer* l, token t)
 {
 	l->pos = t.position;
@@ -70,6 +68,24 @@ token read_token(lexer* l)
 				break;
 			case '.':
 				tok.type = WILDCARD_TOK;
+				break;
+			case '{':
+				if(l->in_cr)
+				{
+					//nested {}'s are invalid
+					break;
+				}
+				tok.type = LCR_TOK;
+				l->in_cr = 1;
+				break;
+			case '}':
+				if(!l->in_cr)
+				{
+					//a naked } is invalid
+					break;
+				}
+				tok.type = RCR_TOK;
+				l->in_cr = 0;
 				break;
 			case '|':
 				tok.type = ALT_TOK;

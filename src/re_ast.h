@@ -19,7 +19,8 @@ typedef enum
 	ALPHA,
 	DIGIT,
 	EMPTY,
-	CAPTURE
+	CAPTURE,
+	CREP,
 } node_type;
 
 /*simple 'base' struct*/
@@ -42,6 +43,13 @@ typedef struct
 
 typedef struct
 {
+	unary_node base;
+	unsigned int min;
+	unsigned int max;
+} loop_node;
+
+typedef struct
+{
 	ast_node base;
 	ast_node *left;
 	ast_node *right;
@@ -59,5 +67,6 @@ unary_node* make_unary(ast_node* sub, node_type t);
 char_node* make_char(char c);
 binary_node* make_binary(ast_node* left, ast_node* right, node_type t);
 multi_node* make_multi(node_type t);
+loop_node* make_loop(ast_node* sub, unsigned int min, unsigned int max);
 
 #endif
