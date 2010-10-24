@@ -73,12 +73,9 @@ size_t sparse_map_num_entries(sparse_map* map)
 {
 	return map->n;
 }
-unsigned int sparse_map_get_entry(sparse_map* map, unsigned int inde, void** val)
+unsigned int sparse_map_get_entry(sparse_map* map, unsigned int ind, void** val)
 {
-	unsigned int ind = *state;
-	unsigned int rval = map->dense[ind];
 	*val = map->values[ind];
-	*state = ind + 1;
-	return rval;
+	return map->dense[ind];
 }
 

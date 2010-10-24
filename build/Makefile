@@ -9,7 +9,7 @@ OBJECTS=$(SRCS:.c=.o)
 LIBOBJECTS=$(LIBSRCS:.c=.o)
 
 CC =gcc -std=c99
-CFLAGS =-Wall -Wextra -Werror -O3 $(INCLUDES)
+CFLAGS =-Wall -Wextra -Werror -g $(INCLUDES)
 
 
 $(TARGET): lib $(OBJECTS)
@@ -117,14 +117,15 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../tests/lexer_tests.o: /usr/include/bits/sys_errlist.h
 ../tests/main.o: ../tests/minunit.h ../tests/lexer_tests.h
 ../tests/main.o: ../tests/parser_tests.h ../tests/matcher_tests.h
-../tests/main.o: ../tests/compiler_tests.h ../tests/perf_tests.h
-../tests/main.o: ../tests/fuzz_tests.h /usr/include/stdio.h
-../tests/main.o: /usr/include/features.h /usr/include/bits/predefs.h
-../tests/main.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-../tests/main.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-../tests/main.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-../tests/main.o: /usr/include/libio.h /usr/include/_G_config.h
-../tests/main.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
+../tests/main.o: ../tests/capture_tests.h ../tests/compiler_tests.h
+../tests/main.o: ../tests/perf_tests.h ../tests/fuzz_tests.h
+../tests/main.o: /usr/include/stdio.h /usr/include/features.h
+../tests/main.o: /usr/include/bits/predefs.h /usr/include/sys/cdefs.h
+../tests/main.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
+../tests/main.o: /usr/include/gnu/stubs-32.h /usr/include/bits/types.h
+../tests/main.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+../tests/main.o: /usr/include/_G_config.h /usr/include/wchar.h
+../tests/main.o: /usr/include/bits/stdio_lim.h
 ../tests/main.o: /usr/include/bits/sys_errlist.h /usr/include/stdlib.h
 ../tests/main.o: /usr/include/sys/types.h /usr/include/time.h
 ../tests/main.o: /usr/include/endian.h /usr/include/bits/endian.h
@@ -132,6 +133,7 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../tests/main.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
 ../tests/main.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
 ../tests/main.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+../tests/main.o: /usr/include/string.h /usr/include/xlocale.h
 ../tests/matcher_tests.o: ../tests/matcher_tests.h ../tests/minunit.h
 ../tests/matcher_tests.o: ../src/regex.h ../src/re_error.h
 ../tests/matcher_tests.o: /usr/include/stdlib.h /usr/include/features.h
@@ -245,11 +247,12 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../src/regex.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
 ../src/regex.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
 ../src/regex.o: ../src/re_error.h ../src/re_ast.h ../src/util/linked_list.h
-../src/regex.o: ../src/regex.h ../src/util/util.h /usr/include/ctype.h
-../src/regex.o: /usr/include/xlocale.h /usr/include/stdio.h
-../src/regex.o: /usr/include/libio.h /usr/include/_G_config.h
-../src/regex.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
-../src/regex.o: /usr/include/bits/sys_errlist.h /usr/include/string.h
+../src/regex.o: ../src/regex.h ../src/util/util.h ../src/util/sparse_map.h
+../src/regex.o: ../src/capture_group.h /usr/include/string.h
+../src/regex.o: /usr/include/xlocale.h /usr/include/ctype.h
+../src/regex.o: /usr/include/stdio.h /usr/include/libio.h
+../src/regex.o: /usr/include/_G_config.h /usr/include/wchar.h
+../src/regex.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
 ../src/re_lexer.o: ../src/re_lexer.h /usr/include/stdio.h
 ../src/re_lexer.o: /usr/include/features.h /usr/include/bits/predefs.h
 ../src/re_lexer.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h

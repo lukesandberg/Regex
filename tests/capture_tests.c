@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int capture(char* re_str, char* str, char** caps)
+int capture(char* re_str, char* str, capture_group** caps)
 {
 	re_error er;
 	regex* re = regex_create(re_str, &er);
@@ -18,10 +18,13 @@ int capture(char* re_str, char* str, char** caps)
 
 char* TestCaptureEverything()
 {
-	char* caps[2];
-	mu_assert("should match", capture("(.*)", "adsfasdf", caps));
-	mu_assert("first char should be a", *(caps[0])=='a');
-	mu_assert("first char should be \\0", *(caps[1])=='\0');
+	capture_group* caps;
+	mu_assert("should match", capture("(.*)", "adsfasdf", &caps));
+	char* start;
+	char* end;
+	start = cg_get_cap(caps, 0, &end);
+	mu_assert("first char should be a", *start == 'a');
+	mu_assert("first char should be \\0", *end == '\0');
 	return NULL;
 }
 

@@ -98,7 +98,7 @@ void regex_destroy(regex* re)
 	free(re);
 }
 
-int regex_matches(regex* re, char*str, char** save_regs)
+int regex_matches(regex* re, char*str, capture_group** r_caps)
 {
 	int rval = -1;
 	sparse_map *clst = NULL;
@@ -116,7 +116,7 @@ int regex_matches(regex* re, char*str, char** save_regs)
 	struct re_run_state state;
 	state.re = re;
 	state.c = str;
-	if(save_regs != NULL)
+	if(r_caps != NULL)
 	{
 		state.cache = make_cg_cache(len);
 		if(state.cache == NULL)
@@ -131,11 +131,10 @@ int regex_matches(regex* re, char*str, char** save_regs)
 	rval = 0;
 	do
 	{
-		sparse_map_itr_state itr = DEFAULT_ITR_STATE;
-		while(sparse_map_itr_has_next(clst, &itr))
+		for(unsigned int i = 0; i < sparse_map_num_entries(clst); i++)
 		{
 			void* val = NULL;
-			unsigned int pc_index = sparse_map_itr_next(clst, &itr, &val);
+			unsigned int pc_index = sparse_map_get_entry(clst, i, &val);
 
 			instruction* pc = prog->code + pc_index;
 			caps = (capture_group*) val;
@@ -163,10 +162,8 @@ int regex_matches(regex* re, char*str, char** save_regs)
 					if(rval)//we are at the end (all matches are anchored)
 						//by default
 					{
-						if(save_regs != NULL)
-						{
-							memcpy(save_regs, &(caps->regs[0]), (re->num_registers) * sizeof(char*));
-						}
+						if(r_caps != NULL)
+							*r_caps = caps;
 						goto end; 
 					}
 					break;
@@ -201,14 +198,8 @@ end:
 	if(clst != NULL)
 		free(clst);
 	if(state.cache != NULL)
-	{
-		for(size_t i = 0; i < state.cache->n; i++)
-		{
-			free(state.cache->cap_cache[i]);
-		}
-		free(state.cache);
-	}
-	if(caps != NULL)
+		free_cg_cache(state.cache);
+	if(caps != NULL && rval != 1)
 		free(caps);
 	return rval;
 

@@ -22,6 +22,14 @@ cg_cache* make_cg_cache(size_t sz)
 	cache->n = 0;
 	return cache;
 }
+void free_cg_cache(cg_cache* c)
+{
+	for(unsigned int i = 0; i < c->n; i++)
+	{
+		free(c->cap_cache[i]);
+	}
+	free(c);
+}
 
 capture_group* make_capture_group(cg_cache* cache, size_t sz)
 {
