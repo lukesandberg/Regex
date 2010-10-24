@@ -19,11 +19,11 @@ char* stop_and_print_timer()
 	struct timeval diff;
 	gettimeofday(&end_time, NULL);
 	timersub(&end_time, &start_time, &diff);
-	snprintf(buf,100, "%ld.%ld", diff.tv_sec, diff.tv_usec);
+	snprintf(buf,100, "%ld.%.6ld", diff.tv_sec, diff.tv_usec);
 	return buf;
 }
 
-char* repeat(char* pattern, int times)
+char* repeat(char* pattern, long long times)
 {
 	size_t len = strlen(pattern);
 	char* buf = malloc(times*len + 1);
@@ -48,9 +48,8 @@ char* acat(char* left, char* right)
 	return buf;
 }
 
-char* TestLongExp()
+char* TestLongExp(long long rep)
 {
-	size_t rep = 10000;
 	char* l = repeat("a?", rep);
 	char* r = repeat("a", rep);
 
@@ -61,14 +60,14 @@ char* TestLongExp()
 	regex_matches(re, r, NULL);
 	
 	char* time = stop_and_print_timer();
-	printf("Long (a?)^%i(a)^%i:\t%s\n", rep, rep, time);
+	printf("Long (a?)^%lld(a)^%lld:\t%s\n", rep, rep, time);
 	regex_destroy(re);
 	free(r);
 	free(re_str);
 	return NULL;
 }
 
-void test_performance()
+void test_performance(long long n)
 {
-	TestLongExp();
+	TestLongExp(n);
 }

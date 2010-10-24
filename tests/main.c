@@ -26,7 +26,12 @@ int main(int argc, char**argv)
 {
 	if(argc == 2 && argv[1][0] == 'p')
 	{
-		test_performance();
+		test_performance(1000l);
+	}
+	if(argc == 3 && argv[1][0] == 'p')
+	{
+		long long n = atoll(argv[2]);
+		test_performance(n);
 	}
 	else if(argc == 1 || (argc == 2 && argv[1][0] == 't'))
 	{

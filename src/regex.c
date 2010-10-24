@@ -37,7 +37,7 @@ tailcall:
 				pc_index = pc->v.jump;
 				goto tailcall;
 			case I_SPLIT:
-				cg_incref(cap);
+				if(cap != NULL) cg_incref(cap);
 				//can't avoid recursion here
 				if(add_to_list(state, map, pc->v.split.left, cap) == 0)
 					return 0;//propgate error
@@ -47,8 +47,8 @@ tailcall:
 				;
 				if(cap != NULL)
 				{
-					capture_group* c = cg_update(state->cache, cap, pc->v.save_register, state->c);
-					if(c == NULL)
+					cap = cg_update(state->cache, cap, pc->v.save_register, state->c);
+					if(cap == NULL)
 						return 0;
 				}
 				pc_index++;
@@ -68,6 +68,19 @@ tailcall:
 	return 1;
 }
 
+static void free_list(struct re_run_state* state, sparse_map* lst)
+{
+	for(unsigned int i = 0; i < sparse_map_num_entries(lst); i++)
+	{
+		void* val = NULL;
+		sparse_map_get_entry(lst, i, &val);
+		if(val != NULL)
+		{
+			cg_decref(state->cache, (capture_group*) val);
+		}
+	}
+	free_sparse_map(lst);
+}
 
 regex* regex_create(char* re_str, re_error* er)
 {
@@ -116,6 +129,7 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 	struct re_run_state state;
 	state.re = re;
 	state.c = str;
+	state.cache = NULL;
 	if(r_caps != NULL)
 	{
 		state.cache = make_cg_cache(len);
@@ -163,7 +177,11 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 						//by default
 					{
 						if(r_caps != NULL)
+						{
 							*r_caps = caps;
+							cg_incref(caps);
+							caps = NULL;
+						}
 						goto end; 
 					}
 					break;
@@ -179,7 +197,7 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 					//we ran out of memory... darn it
 					goto end;
 			}
-			else if(v == 0)
+			else if(v == 0 && state.cache != NULL)
 			{
 				//thread death
 				cg_decref(state.cache, caps);
@@ -194,12 +212,12 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 
 end:
 	if(nlst != NULL)
-		free(nlst);
+		free_list(&state, nlst);
 	if(clst != NULL)
-		free(clst);
+		free_list(&state, clst);
 	if(state.cache != NULL)
 		free_cg_cache(state.cache);
-	if(caps != NULL && rval != 1)
+	if(caps != NULL)
 		free(caps);
 	return rval;
 

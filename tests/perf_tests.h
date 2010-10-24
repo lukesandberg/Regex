@@ -1,6 +1,6 @@
 #ifndef __PERF_TESTS_H__
 #define __PERF_TESTS_H__
 
-void test_performance();
+void test_performance(long long n);
 
 #endif

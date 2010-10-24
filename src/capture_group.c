@@ -44,6 +44,7 @@ capture_group* make_capture_group(cg_cache* cache, size_t sz)
 		c = (capture_group*) malloc(sizeof(capture_group) + sizeof(char*) * sz);
 		if(c == NULL) return NULL;
 		c->sz = sz;
+		c->nref = 0;
 	}
 	c->nref = 1;
 	return c;
@@ -85,7 +86,6 @@ capture_group* cg_update(cg_cache* cache, capture_group* c, unsigned int i, char
 		memcpy(&(r->regs[0]), &(c->regs[0]), sizeof(char*) * c->sz);
 	}
 	r->regs[i] = v;
-	
 	return r;
 }
 
