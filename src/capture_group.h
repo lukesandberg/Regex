@@ -7,6 +7,7 @@ typedef struct _cg_s capture_group;
 typedef struct _cgc_s cg_cache;
 
 capture_group* make_capture_group(cg_cache* cache, size_t sz);
+
 cg_cache* make_cg_cache(size_t sz);
 void free_cg_cache(cg_cache* c);
 

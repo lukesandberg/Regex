@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 void run_tests()
 {
 	test_lexer();
@@ -44,24 +43,23 @@ int main(int argc, char**argv)
 		int m = match(re, str);
 		printf("%s matches %s:\t%s\n", str, re, m?"true": "false"); 
 	}
-	else if(argc == 5 && argv[1][0] == 'c')
+	else if(argc == 4 && argv[1][0] == 'c')
 	{
 		char* re = argv[2];
 		char* str = argv[3];
-		int n = atoi(argv[4]);
-		char** caps = (char**) calloc(2*n, sizeof(char*));
-		int m = capture(re, str, caps);	
+		capture_group* caps;
+		int m = capture(re, str, &caps);	
 		printf("%s matches %s:\t%s\n", str, re, m ? "true": "false");
 		if(m)
 		{
-			for(int i = 0 ; i < n*2; i +=2)
+			for(unsigned int i = 0 ; i < cg_num_captures(caps); i++)
 			{
-				char* sub = strndup(caps[i], caps[i+1] - caps[i]);
-				printf("%i:\t%s\n", i/2, sub);
-				free(sub);
+				char *end = NULL;
+				char* start = cg_get_cap(caps, i, &end);
+				printf("%i:\t%.*s\n", i/2, (end - start + 1), start);
 			}
+			free(caps);
 		}
-		free(caps);
 	}
 	else if(argc >= 2 && argv[1][0] == 'f')//fuzz
 	{

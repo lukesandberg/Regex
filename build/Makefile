@@ -34,8 +34,8 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 
 ../tests/capture_tests.o: ../tests/matcher_tests.h ../tests/minunit.h
 ../tests/capture_tests.o: ../src/regex.h ../src/re_error.h
-../tests/capture_tests.o: /usr/include/stdlib.h /usr/include/features.h
-../tests/capture_tests.o: /usr/include/bits/predefs.h
+../tests/capture_tests.o: ../src/capture_group.h /usr/include/stdlib.h
+../tests/capture_tests.o: /usr/include/features.h /usr/include/bits/predefs.h
 ../tests/capture_tests.o: /usr/include/sys/cdefs.h
 ../tests/capture_tests.o: /usr/include/bits/wordsize.h
 ../tests/capture_tests.o: /usr/include/gnu/stubs.h
@@ -49,7 +49,8 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../tests/capture_tests.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
 ../tests/capture_tests.o: /usr/include/sys/sysmacros.h
 ../tests/capture_tests.o: /usr/include/bits/pthreadtypes.h
-../tests/capture_tests.o: /usr/include/alloca.h /usr/include/stdio.h
+../tests/capture_tests.o: /usr/include/alloca.h /usr/include/string.h
+../tests/capture_tests.o: /usr/include/xlocale.h /usr/include/stdio.h
 ../tests/capture_tests.o: /usr/include/libio.h /usr/include/_G_config.h
 ../tests/capture_tests.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
 ../tests/capture_tests.o: /usr/include/bits/sys_errlist.h
@@ -117,27 +118,28 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../tests/lexer_tests.o: /usr/include/bits/sys_errlist.h
 ../tests/main.o: ../tests/minunit.h ../tests/lexer_tests.h
 ../tests/main.o: ../tests/parser_tests.h ../tests/matcher_tests.h
-../tests/main.o: ../tests/capture_tests.h ../tests/compiler_tests.h
-../tests/main.o: ../tests/perf_tests.h ../tests/fuzz_tests.h
-../tests/main.o: /usr/include/stdio.h /usr/include/features.h
+../tests/main.o: ../tests/capture_tests.h ../src/capture_group.h
+../tests/main.o: /usr/include/stdlib.h /usr/include/features.h
 ../tests/main.o: /usr/include/bits/predefs.h /usr/include/sys/cdefs.h
 ../tests/main.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-../tests/main.o: /usr/include/gnu/stubs-32.h /usr/include/bits/types.h
-../tests/main.o: /usr/include/bits/typesizes.h /usr/include/libio.h
-../tests/main.o: /usr/include/_G_config.h /usr/include/wchar.h
-../tests/main.o: /usr/include/bits/stdio_lim.h
-../tests/main.o: /usr/include/bits/sys_errlist.h /usr/include/stdlib.h
-../tests/main.o: /usr/include/sys/types.h /usr/include/time.h
-../tests/main.o: /usr/include/endian.h /usr/include/bits/endian.h
-../tests/main.o: /usr/include/bits/byteswap.h /usr/include/sys/select.h
-../tests/main.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-../tests/main.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+../tests/main.o: /usr/include/gnu/stubs-32.h /usr/include/sys/types.h
+../tests/main.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
+../tests/main.o: /usr/include/time.h /usr/include/endian.h
+../tests/main.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+../tests/main.o: /usr/include/sys/select.h /usr/include/bits/select.h
+../tests/main.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
+../tests/main.o: /usr/include/sys/sysmacros.h
 ../tests/main.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
 ../tests/main.o: /usr/include/string.h /usr/include/xlocale.h
+../tests/main.o: ../tests/compiler_tests.h ../tests/perf_tests.h
+../tests/main.o: ../tests/fuzz_tests.h /usr/include/stdio.h
+../tests/main.o: /usr/include/libio.h /usr/include/_G_config.h
+../tests/main.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
+../tests/main.o: /usr/include/bits/sys_errlist.h
 ../tests/matcher_tests.o: ../tests/matcher_tests.h ../tests/minunit.h
 ../tests/matcher_tests.o: ../src/regex.h ../src/re_error.h
-../tests/matcher_tests.o: /usr/include/stdlib.h /usr/include/features.h
-../tests/matcher_tests.o: /usr/include/bits/predefs.h
+../tests/matcher_tests.o: ../src/capture_group.h /usr/include/stdlib.h
+../tests/matcher_tests.o: /usr/include/features.h /usr/include/bits/predefs.h
 ../tests/matcher_tests.o: /usr/include/sys/cdefs.h
 ../tests/matcher_tests.o: /usr/include/bits/wordsize.h
 ../tests/matcher_tests.o: /usr/include/gnu/stubs.h
@@ -151,7 +153,8 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../tests/matcher_tests.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
 ../tests/matcher_tests.o: /usr/include/sys/sysmacros.h
 ../tests/matcher_tests.o: /usr/include/bits/pthreadtypes.h
-../tests/matcher_tests.o: /usr/include/alloca.h /usr/include/stdio.h
+../tests/matcher_tests.o: /usr/include/alloca.h /usr/include/string.h
+../tests/matcher_tests.o: /usr/include/xlocale.h /usr/include/stdio.h
 ../tests/matcher_tests.o: /usr/include/libio.h /usr/include/_G_config.h
 ../tests/matcher_tests.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
 ../tests/matcher_tests.o: /usr/include/bits/sys_errlist.h
@@ -183,7 +186,8 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../tests/parser_tests.o: /usr/include/bits/stdio_lim.h
 ../tests/parser_tests.o: /usr/include/bits/sys_errlist.h
 ../tests/perf_tests.o: ../tests/matcher_tests.h ../tests/minunit.h
-../tests/perf_tests.o: ../src/regex.h ../src/re_error.h /usr/include/stdlib.h
+../tests/perf_tests.o: ../src/regex.h ../src/re_error.h
+../tests/perf_tests.o: ../src/capture_group.h /usr/include/stdlib.h
 ../tests/perf_tests.o: /usr/include/features.h /usr/include/bits/predefs.h
 ../tests/perf_tests.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
 ../tests/perf_tests.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
@@ -200,6 +204,20 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../tests/perf_tests.o: /usr/include/bits/stdio_lim.h
 ../tests/perf_tests.o: /usr/include/bits/sys_errlist.h
 ../tests/perf_tests.o: /usr/include/sys/time.h
+../src/capture_group.o: ../src/capture_group.h /usr/include/stdlib.h
+../src/capture_group.o: /usr/include/features.h /usr/include/bits/predefs.h
+../src/capture_group.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+../src/capture_group.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
+../src/capture_group.o: /usr/include/sys/types.h /usr/include/bits/types.h
+../src/capture_group.o: /usr/include/bits/typesizes.h /usr/include/time.h
+../src/capture_group.o: /usr/include/endian.h /usr/include/bits/endian.h
+../src/capture_group.o: /usr/include/bits/byteswap.h
+../src/capture_group.o: /usr/include/sys/select.h /usr/include/bits/select.h
+../src/capture_group.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
+../src/capture_group.o: /usr/include/sys/sysmacros.h
+../src/capture_group.o: /usr/include/bits/pthreadtypes.h
+../src/capture_group.o: /usr/include/alloca.h /usr/include/string.h
+../src/capture_group.o: /usr/include/xlocale.h
 ../src/re_ast.o: ../src/re_ast.h ../src/util/linked_list.h
 ../src/re_ast.o: /usr/include/stdlib.h /usr/include/features.h
 ../src/re_ast.o: /usr/include/bits/predefs.h /usr/include/sys/cdefs.h
@@ -247,9 +265,9 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../src/regex.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
 ../src/regex.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
 ../src/regex.o: ../src/re_error.h ../src/re_ast.h ../src/util/linked_list.h
-../src/regex.o: ../src/regex.h ../src/util/util.h ../src/util/sparse_map.h
-../src/regex.o: ../src/capture_group.h /usr/include/string.h
-../src/regex.o: /usr/include/xlocale.h /usr/include/ctype.h
+../src/regex.o: ../src/regex.h ../src/capture_group.h /usr/include/string.h
+../src/regex.o: /usr/include/xlocale.h ../src/util/util.h
+../src/regex.o: ../src/util/sparse_map.h /usr/include/ctype.h
 ../src/regex.o: /usr/include/stdio.h /usr/include/libio.h
 ../src/regex.o: /usr/include/_G_config.h /usr/include/wchar.h
 ../src/regex.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
@@ -324,6 +342,22 @@ depend:	Makefile $(SRCS) $(LIBSRCS)
 ../src/util/linked_list.o: /usr/include/sys/sysmacros.h
 ../src/util/linked_list.o: /usr/include/bits/pthreadtypes.h
 ../src/util/linked_list.o: /usr/include/alloca.h ../src/util/linked_list.h
+../src/util/sparse_map.o: ../src/util/sparse_map.h /usr/include/stdlib.h
+../src/util/sparse_map.o: /usr/include/features.h /usr/include/bits/predefs.h
+../src/util/sparse_map.o: /usr/include/sys/cdefs.h
+../src/util/sparse_map.o: /usr/include/bits/wordsize.h
+../src/util/sparse_map.o: /usr/include/gnu/stubs.h
+../src/util/sparse_map.o: /usr/include/gnu/stubs-32.h
+../src/util/sparse_map.o: /usr/include/sys/types.h /usr/include/bits/types.h
+../src/util/sparse_map.o: /usr/include/bits/typesizes.h /usr/include/time.h
+../src/util/sparse_map.o: /usr/include/endian.h /usr/include/bits/endian.h
+../src/util/sparse_map.o: /usr/include/bits/byteswap.h
+../src/util/sparse_map.o: /usr/include/sys/select.h
+../src/util/sparse_map.o: /usr/include/bits/select.h
+../src/util/sparse_map.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
+../src/util/sparse_map.o: /usr/include/sys/sysmacros.h
+../src/util/sparse_map.o: /usr/include/bits/pthreadtypes.h
+../src/util/sparse_map.o: /usr/include/alloca.h
 ../src/util/stack.o: /usr/include/stdlib.h /usr/include/features.h
 ../src/util/stack.o: /usr/include/bits/predefs.h /usr/include/sys/cdefs.h
 ../src/util/stack.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h

@@ -52,13 +52,13 @@ capture_group* make_capture_group(cg_cache* cache, size_t sz)
 
 size_t cg_num_captures(capture_group * cg)
 {
-	return cg->sz;
+	return cg->sz / 2;
 }
 
 char* cg_get_cap(capture_group *cg, unsigned int i, char** end)
 {
-	*end = cg->regs[i+1];
-	return cg->regs[i];
+	*end = cg->regs[2*i + 1];
+	return cg->regs[2*i];
 }
 
 void cg_incref(capture_group* c)

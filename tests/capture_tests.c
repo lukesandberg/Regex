@@ -24,7 +24,7 @@ char* TestCaptureEverything()
 	char* end;
 	start = cg_get_cap(caps, 0, &end);
 	mu_assert("first char should be a", *start == 'a');
-	mu_assert("first char should be \\0", *end == '\0');
+	mu_assert("last char should be f", *end == 'f');
 	return NULL;
 }
 
