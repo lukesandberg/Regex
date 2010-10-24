@@ -22,19 +22,13 @@ typedef struct _inst_s
 	{
 		char c;
 		size_t save_register;
-		struct _inst_s* jump;
+		unsigned int jump;
 		struct
 		{
-			struct _inst_s* left;
-			struct _inst_s* right;
-		}split;
+			unsigned int left;
+			unsigned int right;
+		} split;
 	} v;
-	void* tag;
-	//space to hold a value for additional data needed by the runtime
-	//this kind of violates the standard vm abstraction
-	//because we expect this member to be modified at runtime
-	//but generally breaking an abstraction to switch from O(N) to O(1) is
-	//worth it
 } instruction;
 
 typedef struct

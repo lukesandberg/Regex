@@ -6,6 +6,7 @@
 #include <string.h>
 struct compile_state
 {
+	instruction* first;
 	instruction* inst;
 	size_t next_save_reg;
 };
@@ -89,7 +90,7 @@ static inline void compile_op(struct compile_state *state, op_code op)
 
 static inline void flip_split(instruction* split)
 {
-	instruction*tmp = split->v.split.left;
+	unsigned int tmp = split->v.split.left;
 	split->v.split.left = split->v.split.right;
 	split->v.split.right = tmp;
 }
@@ -105,9 +106,9 @@ static inline void compile_qmark(struct compile_state *state, unary_node* n, int
 	instruction* split = state->inst;
 	split->op = I_SPLIT;
 	state->inst++;
-	split->v.split.left = state->inst;//L1
+	split->v.split.left = state->inst - state->first;//L1
 	compile_recursive(state, n->expr);
-	split->v.split.right = state->inst;//L2
+	split->v.split.right = state->inst - state->first;//L2
 	if(ng) flip_split(split);
 }
 
@@ -119,7 +120,7 @@ L3:
 */
 static inline void compile_plus(struct compile_state *state, unary_node* n, int ng)
 {
-	instruction* L1 = state->inst;
+	unsigned int L1 = state->inst - state->first;
 
 	compile_recursive(state, n->expr);
 	
@@ -127,7 +128,7 @@ static inline void compile_plus(struct compile_state *state, unary_node* n, int 
 	split->op = I_SPLIT;
 	split->v.split.left = L1;
 	state->inst++;
-	split->v.split.right = state->inst;//L3
+	split->v.split.right = state->inst - state->first;//L3
 	if(ng) flip_split(split);
 }
 
@@ -144,16 +145,16 @@ static void compile_alt(struct compile_state *state, binary_node* n)
 	instruction* split = state->inst;
 	split->op = I_SPLIT;
 	state->inst++;
-	split->v.split.left = state->inst;//L1
+	split->v.split.left = state->inst - state->first;//L1
 	compile_recursive(state, n->left);//codes for e1
 	
 	instruction* jmp = state->inst;//jmp L3
 	jmp->op = I_JMP;
 	state->inst++;
-	split->v.split.right = state->inst;
+	split->v.split.right = state->inst - state->first;//L2
 
 	compile_recursive(state, n->right);//codes for e2
-	jmp->v.jump = state->inst;//L3
+	jmp->v.jump = state->inst - state->first;//L3
 }
 
 /*
@@ -186,14 +187,14 @@ static inline void compile_star(struct compile_state* state, unary_node* n, int 
 	instruction* split = state->inst; //split L2 L3
 	split->op = I_SPLIT;
 	state->inst++;
-	split->v.split.left = state->inst;//L2	
+	split->v.split.left = state->inst - state->first;//L2	
 	compile_recursive(state, n->expr);
 	
 	instruction* jmp = state->inst;//jmp L1
 	state->inst++;
-	split->v.split.right = state->inst;//L3
+	split->v.split.right = state->inst - state->first;//L3
 	jmp->op = I_JMP;
-	jmp->v.jump = split;
+	jmp->v.jump = split - state->first;
 	if(ng) flip_split(split);
 }
 /*
@@ -285,9 +286,9 @@ program* compile_regex(char* str, re_error* error, size_t *num_save_regs)
 	prog->size = sz;
 	
 	struct compile_state state;
-	state.inst = &(prog->code[0]);
+	state.first = &(prog->code[0]);
+	state.inst = state.first;
 	state.next_save_reg = 0;
-	memset(state.inst, 0, sz * sizeof(instruction));
 
 	compile_recursive(&state, tree);
 	compile_op(&state, I_MATCH);//last instruction should always be a match
