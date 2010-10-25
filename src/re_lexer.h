@@ -40,14 +40,16 @@ typedef struct
 typedef struct
 {
 	char* str;
-	int in_cr;
-	int pos;
+	unsigned int:1 in_cr;
+	unsigned int:1 has_num1;
+	unsigned int:1 has_num2;
+	unsigned int:1 past_comma;
+	unsigned int pos;
 } lexer;
 
 
 void init_lexer(lexer* lexer, char* str);
 //behavior is undefined if you call read_token after receiving an END
 token read_token(lexer* lexer);
-void unread_token(lexer* l, token t);
 
 #endif

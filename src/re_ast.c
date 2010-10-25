@@ -72,7 +72,7 @@ void free_node(ast_node* n)
 		case NG_PLUS:
 		case NG_STAR:
 		case CAPTURE:
-		case REPR:
+		case CREP:
 			;//to avoid the gcc declarations after labels issue
 			unary_node* sn = (unary_node*) n;
 			if(sn->expr != NULL) free_node(sn->expr);

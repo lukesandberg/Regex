@@ -9,7 +9,10 @@ struct compile_state
 	instruction* first;
 	instruction* inst;
 	size_t next_save_reg;
+	size_t max_loop_vars;
+	size_t next_loop_var;
 };
+
 
 static inline void compile_concat(struct compile_state *state, multi_node* n);
 static inline void compile_alt(struct compile_state *state, binary_node* n);
@@ -19,12 +22,16 @@ static inline void compile_capture(struct compile_state *state, unary_node* n);
 static inline void compile_star(struct compile_state *state, unary_node* n, int ng);
 static inline void compile_char(struct compile_state *state, char_node* n);
 static inline void compile_op(struct compile_state *state, op_code op);
+static inline void compile_crep(struct compile_state *state, loop_node* n);
 static void compile_recursive(struct compile_state *state, ast_node* n)
 {
 	switch(n->type)
 	{
 		case CHAR:
 			compile_char(state, (char_node*) n);
+			break;
+		case CREP:
+			compile_crep(state, (loop_node*) n);
 			break;
 		case STAR:
 		case NG_STAR:
@@ -95,6 +102,64 @@ static inline void flip_split(instruction* split)
 	split->v.split.right = tmp;
 }
 
+/*
+e{n,m}:
+    SETZ idx
+L1: SPLIT L2 L3
+L2: DGT idx M
+    codes for e
+    INCR idx
+    JMP L1
+L3: DLT idx N 
+*/
+static inline void compile_crep(struct compile_state *state, loop_node* n)
+{
+	unsigned int reg = state->next_loop_var;
+	state->next_loop_var++;
+	if(state->next_loop_var > state->max_loop_vars)
+	{
+		state->max_loop_vars = state->next_loop_var;
+	}
+	instruction* setz = state->inst;
+	setz->op = I_SETZ;
+	setz->v.idx = reg;
+	state->inst++;
+	
+	unsigned int L1 = state->inst - state->first;
+	instruction* split = state->inst;
+	state->inst++;
+	unsigned int L2 = state->inst - state->first;
+	split->v.split.left = L2;
+
+	instruction* dgt = state->inst;
+	dgt->op = I_DGT;
+	dgt->v.comparison.idx = reg;
+	dgt->v.comparison.comp = n->max;
+	state->inst++;
+
+	compile_recursive(state, n->base.expr);
+
+	instruction *incr = state->inst;
+	incr->op = I_INCR;
+	incr->v.idx = reg;
+	state->inst++;
+
+	instruction *jmp = state->inst;
+	jmp->op = I_JMP;
+	jmp->v.jump = L1;
+	state->inst++;
+
+	unsigned int L3 = state->inst - state->first;
+	split->v.split.right = L3;
+
+	instruction* dlt = state->inst;
+	dlt->op = I_DLT;
+	dlt->v.comparison.idx = reg;
+	dlt->v.comparison.comp = n->min;
+	state->inst++;
+
+	state->next_loop_var--;
+}
 /*
 e?:
     split L1, L2
@@ -221,6 +286,8 @@ static size_t program_size(ast_node* n)
 {	
 	switch(n->type)
 	{
+		case CREP:
+			return 6 + program_size(((unary_node*)n)->expr);
 		case NG_PLUS:
 		case PLUS:
 			//plus's are the sub exp plus a split
@@ -263,7 +330,7 @@ static size_t program_size(ast_node* n)
 	return 0;
 }
 
-program* compile_regex(char* str, re_error* error, size_t *num_save_regs)
+program* compile_regex(char* str, re_error* error, size_t *num_save_regs, size_t* num_loop_regs)
 {
 	ast_node* tree = re_parse(str, error);
 	if(tree == NULL)
@@ -289,10 +356,13 @@ program* compile_regex(char* str, re_error* error, size_t *num_save_regs)
 	state.first = &(prog->code[0]);
 	state.inst = state.first;
 	state.next_save_reg = 0;
+	state.max_loop_vars = 0;
+	state.next_loop_var = 0;
 
 	compile_recursive(&state, tree);
 	compile_op(&state, I_MATCH);//last instruction should always be a match
 	*num_save_regs = state.next_save_reg;
+	*num_loop_regs = state.max_loop_vars;
 end:
 	free_node(tree);
 	return prog;

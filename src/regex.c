@@ -53,6 +53,9 @@ tailcall:
 				}
 				pc_index++;
 				goto tailcall;
+			case I_DGT:
+				
+				break;
 			case I_CHAR:
 			case I_WHITESPACE:
 			case I_WILDCARD:

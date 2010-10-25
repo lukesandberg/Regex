@@ -12,7 +12,11 @@ typedef enum
 	I_JMP,
 	I_SPLIT,
 	I_MATCH,
-	I_SAVE
+	I_SAVE,
+	I_DGT,
+	I_DLT,
+	I_SETZ,
+	I_INCR
 }op_code;
 
 typedef struct _inst_s
@@ -21,13 +25,19 @@ typedef struct _inst_s
 	union
 	{
 		char c;
-		size_t save_register;
+		unsigned int save_register;
+		unsigned int idx;//for setz incr instructions
 		unsigned int jump;
 		struct
 		{
 			unsigned int left;
 			unsigned int right;
 		} split;
+		struct
+		{
+			unsigned int idx;
+			unsigned int comp;
+		} comparison;
 	} v;
 } instruction;
 

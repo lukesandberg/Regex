@@ -97,40 +97,103 @@ static ast_node* handle_group(fat_stack* tok_stk, re_error *er)
 	fat_stack_destroy(sub_stk);
 	return sub;
 }
+static int read_num(fat_stack* tok_stk, re_error *er, unsigned int* val)
+{
+	if(fat_stack_size(tok_stk) == 0)
+	{
+		parse_error(E_EXPECTED_TOKEN, -1);
+		return 0;
+	}
+	token* tokptr = (token*) fat_stack_peek(tok_stk);
+	token tok = *tokptr;//copy to local mem
+	fat_stack_pop(tok_stk);
+	if(tok.type == NUM_TOK)
+	{
+		*val = tok.v.num_value;
+		return 1;
+	}
+	parse_error(E_INVALID_TOKEN, tok.position);
+	return 0;
+}
+//0 is failure, 1 is comma, 2 is lbrackted
+static int read_comma_or_lbracket(fat_stack* tok_stk, re_error * er)
+{
+	if(fat_stack_size(tok_stk) == 0)
+	{
+		parse_error(E_EXPECTED_TOKEN, -1);
+		return 0;
+	}
+	token* tokptr = (token*) fat_stack_peek(tok_stk);
+	token tok = *tokptr;//copy to local mem
+	fat_stack_pop(tok_stk);
+	if(tok.type == COMMA_TOK)
+	{
+		return 1;
+	}
+	if(tok.type == LCR_TOK)
+	{
+		return 2;
+	}
+	
+	parse_error(E_INVALID_TOKEN, tok.position);
+	return 0;
+}
+
 static ast_node* parse_counted_rep(fat_stack* tok_stk, re_error*er)
 {
-	//we have already popped off the '}' now read 1 or 2 nums possible 
-	//separated by a , and return a loop_node
-	int done = 0;
-	unsigned int min;
-	unsigned int max;
-	int digit = 0;
-	while(!done)
+	unsigned int max = 0;
+	unsigned int min = 0;
+	if(read_num(tok_stk, er, &max))
 	{
-		if(fat_stack_size(tok_stk) == 0)
+		min = max;
+		switch(read_comma_or_lbracket(tok_stk, er))
 		{
-			parse_error(E_EXPECTED_TOKEN, -1);
-			return NULL;
-		}
-		token* tokptr = (token*) fat_stack_peek(tok_stk);
-		token tok = *tokptr;//copy to local mem
-		fat_stack_pop(tok_stk);
-		if(tok.type == CHAR_TOK)
-		{
-			char c = tok.v.char_value;
-			if(!isspace(c) && !isdigit(c))
-			{
-				parse_error(E_UNEXPECTED_CHAR, tok.position);
+			case 1://comma
+				if(!read_num(tok_stk, er, &min))
+				{
+					return  NULL;
+				}
+				if(read_comma_or_lbracket(tok_stk, er) != 2)
+				{
+					return NULL;
+				}
+				break;
+			case 2://lbracket
+				break;
+			default:
 				return NULL;
-			}
-			//
-		}
-		else
-		{
-			parse_error(E_INVALID_TOKEN, tok.position);
-			return NULL;
 		}
 	}
+	else
+	{
+		return NULL;
+	}
+	
+	ast_node* sub = parse_basic_re(tok_stk, er);
+	if(sub == NULL)
+	{
+		//fix our error message
+		parse_error(E_MISSING_OP_ARGUMENT, tok.position);
+		return NULL;
+	}
+	ast_node* n = (ast_node*)  make_loop(sub, min, max);
+	if(n == NULL)
+	{
+		parse_error(E_OUT_OF_MEMORY, -1);
+		free_node(sub);
+	}
+	return n;
+
+}
+
+static ast_node* oom_check(ast_node* node, re_error *er)
+{
+	if(node == NULL)
+	{
+		parse_error(E_OUT_OF_MEMORY, -1);
+		return NULL;
+	}
+	return node;
 }
 
 static ast_node* parse_basic_re(fat_stack* tok_stk, re_error *er)
@@ -147,15 +210,15 @@ static ast_node* parse_basic_re(fat_stack* tok_stk, re_error *er)
 	switch(tok.type)
 	{
 		case CHAR_TOK:
-			return (ast_node*) make_char(tok.v.char_value);
+			return oom_check((ast_node*) make_char(tok.v.char_value), er);
 		case WILDCARD_TOK:
-			return (ast_node*) make_node(WILDCARD);
+			return oom_check((ast_node*) make_node(WILDCARD), er);
 		case ALPHA_TOK:
-			return (ast_node*) make_node(ALPHA);
+			return oom_check((ast_node*) make_node(ALPHA), er);
 		case WHITESPACE_TOK:
-			return (ast_node*) make_node(WHITESPACE);
+			return oom_check((ast_node*) make_node(WHITESPACE), er);
 		case DIGIT_TOK:
-			return (ast_node*) make_node(DIGIT);
+			return oom_check((ast_node*) make_node(DIGIT), er);
 		/*unary ops all have the same precedence*/
 		case PLUS_TOK:
 			unary_type = PLUS;
@@ -327,10 +390,12 @@ static inline fat_stack* read_all_tokens(lexer* lxr, re_error* er)
 	return stk;
 }
 
-static ast_node* parse_re(lexer* lxr, re_error* er)
+ast_node* re_parse(char *regex, re_error* er)
 {
-	token tok = read_token(lxr);
-	if(tok.type == END_TOK)
+	//default to success
+	parse_error(E_SUCCESS, -1);
+	
+	if(*regex == '\0')
 	{
 		ast_node* n = make_node(EMPTY);
 		if(n == NULL)
@@ -340,21 +405,15 @@ static ast_node* parse_re(lexer* lxr, re_error* er)
 		}
 		return n;
 	}
-	unread_token(lxr, tok);
+	
+	lexer lxr;
+	init_lexer(&lxr, regex);
+	
 	fat_stack* stk = read_all_tokens(lxr, er);
 	if(stk == NULL)
 		return NULL;
 	ast_node* tree = parse_reg(stk, er);
 	fat_stack_destroy(stk);
 	return tree;
-}
 
-ast_node* re_parse(char *regex, re_error* er)
-{
-	//default to success
-	parse_error(E_SUCCESS, -1);
-	
-	lexer l;
-	init_lexer(&l, regex);
-	return parse_re(&l, er);
 }
