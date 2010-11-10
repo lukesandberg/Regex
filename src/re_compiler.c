@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+
 struct compile_state
 {
 	instruction* first;
@@ -12,7 +13,6 @@ struct compile_state
 	size_t max_loop_vars;
 	size_t next_loop_var;
 };
-
 
 static inline void compile_concat(struct compile_state *state, multi_node* n);
 static inline void compile_alt(struct compile_state *state, binary_node* n);
@@ -329,8 +329,26 @@ static size_t program_size(ast_node* n)
 	dassert(0, "unexpected case");
 	return 0;
 }
+static void inline modify_indices(instruction* inst, size_t len, size_t offset)
+{
+	for(int i = 0; i < len; i++)
+	{
+		op_code op = inst->op;
+		if(op == I_DGT || op == I_DLT)
+		{
+			inst->comparison.idx += offset;
+		}
+		else if(op == I_SETZ || op == I_INCR)
+		{
+			inst.idx += offset;
+		}
 
-program* compile_regex(char* str, re_error* error, size_t *num_save_regs, size_t* num_loop_regs)
+		inst++;
+	}
+}
+
+
+program* compile_regex(char* str, re_error* error, size_t *num_regs)
 {
 	ast_node* tree = re_parse(str, error);
 	if(tree == NULL)
@@ -339,8 +357,8 @@ program* compile_regex(char* str, re_error* error, size_t *num_save_regs, size_t
 	tree = optimize(tree);
 
 	size_t sz = program_size(tree) + 1;//we add one for the final match inst
-
 	program* prog = malloc(sizeof(program) + sz * sizeof(instruction));
+	
 	if(prog == NULL)
 	{
 		if(error != NULL)
@@ -361,8 +379,10 @@ program* compile_regex(char* str, re_error* error, size_t *num_save_regs, size_t
 
 	compile_recursive(&state, tree);
 	compile_op(&state, I_MATCH);//last instruction should always be a match
-	*num_save_regs = state.next_save_reg;
-	*num_loop_regs = state.max_loop_vars;
+	*num_regs = state.next_save_reg  + state.max_loop_vars;
+
+	modify_indices(state->first, sz, state.next_save_reg);
+
 end:
 	free_node(tree);
 	return prog;

@@ -1,24 +1,24 @@
-#ifndef _CAPTURE_GROUP_H_
-#define _CAPTURE_GROUP_H_
+#ifndef _THREAD_STATE_H_
+#define _THREAD_STATE_H_
 
 #include <stdlib.h>
 #include <string.h>
-typedef struct _cg_s capture_group;
-typedef struct _cgc_s cg_cache;
+typedef struct _ts_s thread_state;
+typedef struct _tsc_s ts_cache;
 
-capture_group* make_capture_group(cg_cache* cache, size_t sz);
+thread_state* make_thread_state(ts_cache* cache, size_t sz);
 
-cg_cache* make_cg_cache(size_t sz);
-void free_cg_cache(cg_cache* c);
+ts_cache* make_ts_cache(size_t sz);
+void free_ts_cache(ts_cache* c);
 
-void cg_incref(capture_group* c);
+void ts_incref(thread_state* c);
 
-void cg_decref(cg_cache* cache, capture_group* c);
+void ts_decref(ts_cache* cache, thread_state* c);
 
-capture_group* cg_update(cg_cache* cache, capture_group* c, unsigned int i, char* v);
+thread_state* ts_update(ts_cache* cache, thread_state* c, unsigned int i, char* v);
 
-size_t cg_num_captures(capture_group * cg);
+size_t ts_num_captures(thread_state * ts);
 
-char* cg_get_cap(capture_group *cg, unsigned int i, char** end);
+char* ts_get_cap(thread_state *ts, unsigned int i, char** end);
 
 #endif

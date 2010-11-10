@@ -1,47 +1,48 @@
-#include <capture_group.h>
+#include <thread_state.h>
 #include <stdlib.h>
+#include <stdint.h>
 
-struct _cg_s
+struct _ts
 {
 	size_t nref;
 	size_t sz;
 	char* regs[];
 };
 
-struct _cgc_s
+struct _tsc_s
 {
 	size_t n;
-	capture_group* cap_cache[];
+	thread_state* ts_cache[];
 };
 
-cg_cache* make_cg_cache(size_t sz)
+ts_cache* make_ts_cache(size_t sz)
 {
-	cg_cache* cache = (cg_cache*) malloc(sizeof(cg_cache) + sizeof(capture_group*) * sz);
+	ts_cache* cache = (ts_cache*) malloc(sizeof(ts_cache) + sizeof(thread_state*) * sz);
 	if(cache == NULL)
 		return NULL;
 	cache->n = 0;
 	return cache;
 }
-void free_cg_cache(cg_cache* c)
+void free_ts_cache(ts_cache* c)
 {
 	for(unsigned int i = 0; i < c->n; i++)
 	{
-		free(c->cap_cache[i]);
+		free(c->ts_cache[i]);
 	}
 	free(c);
 }
 
-capture_group* make_capture_group(cg_cache* cache, size_t sz)
+thread_state* make_thread_state(ts_cache* cache, size_t sz)
 {
-	capture_group* c;
+	thread_state* c;
 	if(cache->n > 0)
 	{
 		cache->n--;
-		c = cache->cap_cache[cache->n];
+		c = cache->ts_cache[cache->n];
 	}
 	else
 	{
-		c = (capture_group*) malloc(sizeof(capture_group) + sizeof(char*) * sz);
+		c = (thread_state*) malloc(sizeof(thread_state) + sizeof(char*) * sz);
 		if(c == NULL) return NULL;
 		c->sz = sz;
 		c->nref = 0;
@@ -50,38 +51,38 @@ capture_group* make_capture_group(cg_cache* cache, size_t sz)
 	return c;
 }
 
-size_t cg_num_captures(capture_group * cg)
+size_t ts_num_captures(thread_state * ts)
 {
-	return cg->sz / 2;
+	return ts->sz / 2;
 }
 
-char* cg_get_cap(capture_group *cg, unsigned int i, char** end)
+char* ts_get_cap(thread_state *ts, unsigned int i, char** end)
 {
-	*end = cg->regs[2*i + 1];
-	return cg->regs[2*i];
+	*end = ts->regs[2*i + 1];
+	return ts->regs[2*i];
 }
 
-void cg_incref(capture_group* c)
+void ts_incref(thread_state* c)
 {
 	c->nref++;
 }
-void cg_decref(cg_cache* cache, capture_group* c)
+void ts_decref(ts_cache* cache, thread_state* c)
 {
 	c->nref--;
 	if(c->nref == 0)
 	{
-		cache->cap_cache[cache->n] = c;
+		cache->ts_cache[cache->n] = c;
 		cache->n++;
 	}
 }
 
-capture_group* cg_update(cg_cache* cache, capture_group* c, unsigned int i, char* v)
+thread_state* ts_update(ts_cache* cache, thread_state* c, unsigned int i, char* v)
 {
-	capture_group* r = c;
+	thread_state* r = c;
 	if(c->nref > 1)
 	{
 		c->nref--;
-		r = make_capture_group(cache, c->sz);
+		r = make_thread_state(cache, c->sz);
 		if(r == NULL) return NULL;
 		memcpy(&(r->regs[0]), &(c->regs[0]), sizeof(char*) * c->sz);
 	}

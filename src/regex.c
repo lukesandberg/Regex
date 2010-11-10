@@ -24,6 +24,8 @@ struct re_run_state
 	cg_cache* cache;
 };
 
+
+
 static int add_to_list(struct re_run_state *state, sparse_map* map, unsigned int pc_index, capture_group* cap)
 {
 tailcall:
