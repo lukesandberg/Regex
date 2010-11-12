@@ -86,16 +86,32 @@ static char* TestEscapeSequences()
 static char* TestCountedRepetitions()
 {
 	lexer l;
-	char* ts = "a{2}";
+	char* ts = "a{   2    }";
 	init_lexer(&l, ts);
 	token t = read_token(&l);
 	mu_assert("should be char", t.type == CHAR_TOK);
-	mu_assert("should be \\ value", t.v.char_value == 'a');
+	mu_assert("should be a value", t.v.char_value == 'a');
 	t = read_token(&l);
 	mu_assert("should be LCR_TOK", t.type == LCR_TOK);
 	t = read_token(&l);
 	mu_assert("should be NUM_TOK", t.type == NUM_TOK);
 	mu_assert("value should be 2", t.v.num_value==2);
+	t = read_token(&l);
+	mu_assert("should be RCR_TOK", t.type == RCR_TOK);
+
+	init_lexer(&l, "a{2  ,3 }");
+	t = read_token(&l);
+	mu_assert("should be char", t.type == CHAR_TOK);
+	mu_assert("should be a value", t.v.char_value == 'a');
+	t = read_token(&l);
+	mu_assert("should be LCR_TOK", t.type == LCR_TOK);
+	t = read_token(&l);
+	mu_assert("should be NUM_TOK", t.type == NUM_TOK);
+	mu_assert("value should be 2", t.v.num_value==2);
+	t = read_token(&l);
+	mu_assert("should be COMMA_TOK", t.type == COMMA_TOK);
+	t = read_token(&l);
+	mu_assert("should be NUM_TOK", t.type == NUM_TOK);
 	t = read_token(&l);
 	mu_assert("should be RCR_TOK", t.type == RCR_TOK);
 	return NULL;
