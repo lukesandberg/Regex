@@ -13,7 +13,7 @@ void mu_process_result(char * tn, char* result)
 	{
 		if(verbose)
 		{
-			printf("%i\t%s:\tSucess\n", tests_run, tn);
+			printf("%i\t%s:\tSuccess\n", tests_run, tn);
 		}
 	}
 	else

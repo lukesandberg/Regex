@@ -83,6 +83,16 @@ static char* TestEscapeSequences()
 	return NULL;
 }
 
+static char* TestCountedRepetitions()
+{
+	lexer l;
+	char* ts = "a{2}";
+	init_lexer(&l, ts);
+	token t = read_token(&l);
+	mu_assert("should be char", t.type == CHAR_TOK);
+	mu_assert("should be \\ value", t.v.char_value == 'a');
+	return NULL;
+}
 
 void test_lexer()
 {
