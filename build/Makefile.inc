@@ -14,4 +14,3 @@ SHELL	= /bin/sh
 TESTNAME=testre
 LIBNAME=libre.a
 
-.SILENT :

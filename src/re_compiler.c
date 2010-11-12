@@ -127,7 +127,9 @@ static inline void compile_crep(struct compile_state *state, loop_node* n)
 	
 	unsigned int L1 = state->inst - state->first;
 	instruction* split = state->inst;
+	split->op = I_SPLIT;
 	state->inst++;
+	
 	unsigned int L2 = state->inst - state->first;
 	split->v.split.left = L2;
 

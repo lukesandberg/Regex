@@ -3,43 +3,52 @@
 
 struct _sparse_map_s
 {
-	unsigned int* dense;
-	unsigned int* sparse;
 	void** values;
 	unsigned int n;
 	size_t max;
+	unsigned int indices[];
 };
 
 sparse_map* make_sparse_map(size_t max)
 {
-	sparse_map* map = (sparse_map*) malloc(sizeof(sparse_map));
+	sparse_map* map = (sparse_map*) malloc(sizeof(sparse_map) + sizeof(unsigned int) * max * 2);
 	if(map == NULL) 
 		return NULL;
-	unsigned int *arrs = (unsigned int*) malloc(sizeof(unsigned int)* 2 * max);
-	if(arrs == NULL) 
-	{
-		free(map);
-		return NULL;
-	}
 	void** vals = (void**) malloc(sizeof(void*)*max);
 	if(vals == NULL) 
 	{
-		free(arrs);
 		free(map);
 		return NULL;
 	}
 	
 	map->max = max;
 	map->n = 0;
-	map->dense = arrs;
-	map->sparse = arrs+max;
 	map->values = vals;
 	return map;
 }
 
+static inline void set_dense(sparse_map* map, unsigned int n, unsigned int v)
+{
+    map->indices[n] = v;
+}
+
+static inline void set_sparse(sparse_map* map, unsigned int n, unsigned int v)
+{
+    map->indices[map->max + n] = v;
+}
+
+static inline unsigned int get_dense(sparse_map* map, unsigned int n)
+{
+    return map->indices[n];
+}
+
+static inline unsigned int get_sparse(sparse_map* map, unsigned int n)
+{
+    return map->indices[map->max + n];
+}
+
 void free_sparse_map(sparse_map* map)
 {
-	free(map->dense);
 	free(map->values);
 	free(map);
 }
@@ -47,21 +56,20 @@ void free_sparse_map(sparse_map* map)
 void sparse_map_set(sparse_map* map, unsigned int i, void* v)
 {
 	unsigned int n = map->n;
-	map->dense[n] = i;
+	set_dense(map, n, i);
+	set_sparse(map, i, n);
 	map->values[n] = v;
-	map->sparse[i] = n;
 	map->n = n+1;
 }
 
 int sparse_map_contains(sparse_map* map, unsigned int i)
 {
-	unsigned int s = map->sparse[i];
-	return s < map->n && map->dense[s] == i;
+	unsigned int s = get_sparse(map, i);
+	return s < map->n && get_dense(map,s) == i;
 }
 void* sparse_map_get(sparse_map* map, unsigned int i)
 {
-	unsigned int ind = map->sparse[i];
-	return map->values[ind];
+	return map->values[get_sparse(map, i)];
 }
 
 void sparse_map_clear(sparse_map* map)
@@ -76,6 +84,6 @@ size_t sparse_map_num_entries(sparse_map* map)
 unsigned int sparse_map_get_entry(sparse_map* map, unsigned int ind, void** val)
 {
 	*val = map->values[ind];
-	return map->dense[ind];
+	return get_dense(map, ind);
 }
 

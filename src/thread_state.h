@@ -48,7 +48,6 @@ static inline thread_state* make_thread_state(ts_cache* cache, size_t sz)
 		c = (thread_state*) malloc(sizeof(thread_state) + sizeof(uintptr_t) * sz);
 		if(c == NULL) return NULL;
 		c->sz = sz;
-		c->nref = 0;
 	}
 	c->nref = 1;
 	return c;

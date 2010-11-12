@@ -10,9 +10,7 @@ LIB=../build/$(LIBNAME)
 all: $(LIB)
 
 $(LIB) : $(OBJS)
-	$(ECHO) $(AR) $(ARFLAGS) rv $(LIB) $?
-	$(AR) $(ARFLAGS) rv $(LIB) $?
-	$(ECHO) $(RANLIB) $(LIB)
+	$(AR) $(ARFLAGS) r $(LIB) $?
 	$(RANLIB) $(LIB)
 
 clean:
@@ -22,6 +20,7 @@ clean:
 
 depend: Makefile $(SRCS)
 	makedepend $(INCLUDES) $(SRCS) Makefile
+	
 # DO NOT DELETE
 
 capture_group.o: ./capture_group.h

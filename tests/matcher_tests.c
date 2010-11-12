@@ -91,6 +91,15 @@ char* TestSubExpression()
 	return NULL;
 }
 
+char* TestCountedRep()
+{
+    mu_assert("basic counted rep match: \"a{2}\", \"aa\"", match("a{2}", "aa"));
+    mu_assert("range counted rep match: \"a{2,4}\", \"aa\"", match("a{2,4}", "aa"));
+    mu_assert("range counted rep match: \"a{2,4}\", \"aaa\"", match("a{2,4}", "aaa"));
+    mu_assert("range counted rep match: \"a{2,4}\", \"aaaa\"", match("a{2,4}", "aaaa"));
+    mu_assert("range counted rep no match: \"a{2,4}\", \"aaaaa\"", !match("a{2,4}", "aaaaa"));
+    return NULL;
+}
 
 void  test_matcher()
 {
@@ -105,4 +114,5 @@ void  test_matcher()
 	mu_run_test(TestPlus);
 	mu_run_test(TestAlternation);
 	mu_run_test(TestSubExpression);
+	mu_run_test(TestCountedRep);
 }

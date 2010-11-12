@@ -137,6 +137,37 @@ static char* TestCountedRepetition()
 	mu_assert("expr should be CHAR expr", ln->base.expr->type==CHAR);
 	mu_assert("expr should be a value", ((char_node*)(ln->base.expr))->c=='a');
 	free_node(tree);
+
+	tree = re_parse("a{2, 4}", &er);
+	if(tree == NULL)
+	{
+	    return (char*) re_error_description(er);
+	}
+	mu_assert("should be loop node", tree->type==CREP);
+	ln = (loop_node*) tree;
+	mu_assert("min loop range should be 2", ln->min == 2);
+	mu_assert("max loop range should be 4", ln->max == 4);
+	mu_assert("expr should be CHAR expr", ln->base.expr->type==CHAR);
+	mu_assert("expr should be a value", ((char_node*)(ln->base.expr))->c=='a');
+	free_node(tree);
+	return NULL;
+}
+static char* TestCountedRepetitionGroup()
+{
+    	re_error er;
+	ast_node* tree = re_parse("(abc){2}", &er);
+	if(tree == NULL)
+	{
+	    return (char*) re_error_description(er);
+	}
+	mu_assert("should be loop node", tree->type==CREP);
+	loop_node* ln = (loop_node*) tree;
+	mu_assert("min loop range should be 2", ln->min == 2);
+	mu_assert("max loop range should be 2", ln->max == 2);
+	mu_assert("expr should be CAPTURE expr", ln->base.expr->type==CAPTURE);
+	unary_node* cg = (unary_node*) ln->base.expr;
+	mu_assert("capture should be concat group", cg->expr->type == CONCAT);
+	free_node(tree);
 	return NULL;
 }
 void test_parser()
@@ -153,4 +184,5 @@ void test_parser()
 	mu_run_test(TestInvalid);
 	mu_run_test(TestNullError);
 	mu_run_test(TestCountedRepetition);
+	mu_run_test(TestCountedRepetitionGroup);
 }

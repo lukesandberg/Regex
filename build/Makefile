@@ -16,11 +16,11 @@ perf: $(TESTNAME)
 
 $(LIBNAME) : force_look
 	$(ECHO) checking lib
-	cd ../src; $(MAKE) $(MFLAGS)
+	cd ../src; $(MAKE)
 
 $(TESTNAME) : force_look $(LIBNAME)
 	$(ECHO) checking test
-	cd ../tests; $(MAKE) $(MFLAGS)
+	cd ../tests; $(MAKE)
 
 
 clean:

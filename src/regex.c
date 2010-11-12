@@ -29,7 +29,7 @@ struct re_run_state
 
 static int add_to_list(struct re_run_state *state, sparse_map* map, unsigned int pc_index, thread_state* ts)
 {
-	unsigned int reg_val;
+	unsigned int reg_val = 0;
 tailcall:
 	if(!sparse_map_contains(map, pc_index))
 	{
@@ -41,20 +41,16 @@ tailcall:
 				pc_index = pc->v.jump;
 				goto tailcall;
 			case I_SPLIT:
-				if(ts != NULL) ts_incref(ts);
+				ts_incref(ts);
 				//can't avoid recursion here
 				if(add_to_list(state, map, pc->v.split.left, ts) == 0)
 					return 0;//propgate error
 				pc_index = pc->v.split.right;
 				goto tailcall;
 			case I_SAVE:
-				;
-				if(ts != NULL)
-				{
-					ts = ts_update(state->cache, ts, pc->v.save_register, (unsigned int) state->c);
-					if(ts == NULL)
-						return 0;
-				}
+				ts = ts_update(state->cache, ts, pc->v.save_register, (unsigned int) state->c);
+				if(ts == NULL)
+					return 0;
 				pc_index++;
 				goto tailcall;
 			case I_DGT:
@@ -123,9 +119,9 @@ static void free_list(struct re_run_state* state, sparse_map* lst)
 
 static inline capture_group* extract_capture_groups(regex* re, thread_state* ts)
 {
-  capture_group* cg = (capture_group*) malloc(sizeof(capture_group) + sizeof(char*) * re->num_capture_regs);
-  memcpy(cg->regs, ts->regs, re->num_capture_regs*sizeof(char*));
-  return cg;
+	capture_group* cg = (capture_group*) malloc(sizeof(capture_group) + sizeof(char*) * re->num_capture_regs);
+	memcpy(cg->regs, ts->regs, re->num_capture_regs*sizeof(char*));
+	return cg;
 }
 
 int regex_matches(regex* re, char*str, capture_group** r_caps)
@@ -146,19 +142,14 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 	struct re_run_state state;
 	state.re = re;
 	state.c = str;
-	state.cache = NULL;
-	if(r_caps != NULL)
-	{
-		state.cache = make_ts_cache(len);
-		if(state.cache == NULL)
-			goto end;
-		ts = make_thread_state(state.cache, re->num_registers);
-		if(ts == NULL)
-			goto end;
-	}
+	state.cache = make_ts_cache(len);
+	if(state.cache == NULL)
+		goto end;
+	ts = make_thread_state(state.cache, re->num_registers);
+	if(ts == NULL)
+		goto end;
 	if(!add_to_list(&state, clst, 0, ts))
 		goto end;
-	ts = NULL;
 	rval = 0;
 	do
 	{
@@ -220,7 +211,7 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 					//we ran out of memory... darn it
 					goto end;
 			}
-			else if(v == 0 && state.cache != NULL)
+			else if(v == 0)
 			{
 				//thread death
 				ts_decref(state.cache, ts);

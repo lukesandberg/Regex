@@ -8,10 +8,10 @@ CFLAGS=$(PRJCFLAGS) $(INCLUDES)
 
 EXE=../build/$(TESTNAME)
 LIB=../build/$(LIBNAME)
+
 all: $(EXE)
 
 $(EXE) : $(OBJS) $(LIB)
-	$(ECHO) $(CC) $(CFLAGS) $? -o $@
 	$(CC) $(CFLAGS) $? -o $@
 clean:
 	$(ECHO) cleaning testb

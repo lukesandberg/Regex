@@ -21,12 +21,20 @@ Type=Native Application
 
 [Launch][Launch Configuration 0][Data]
 Arguments=
+Debugger Shell=
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
+Display Demangle Names=true
+Display Static Members=true
 EnvironmentGroup=default
-Project Target=Regex,build,testre
+Executable=file:///home/luke/Regex/build/testre
+GDB Path=file:///usr/bin/gdb
+Remote GDB Config Script=
+Remote GDB Run Script=
+Remote GDB Shell Script=
+Try Setting Breakpoints On Loading Libraries=true
 Working Directory=
-isExecutable=false
+isExecutable=true
 
 [MakeBuilder]
 Default Target=test

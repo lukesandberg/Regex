@@ -115,7 +115,7 @@ static int read_num(fat_stack* tok_stk, re_error *er, unsigned int* val)
 	parse_error(E_INVALID_TOKEN, tok.position);
 	return 0;
 }
-//0 is failure, 1 is comma, 2 is lbrackted
+//0 is failure, 1 is comma, 2 is lbracket
 static int read_comma_or_lbracket(fat_stack* tok_stk, re_error * er)
 {
 	if(fat_stack_size(tok_stk) == 0)
