@@ -68,16 +68,16 @@ token read_token(lexer* l)
 				l->has_num2 = 0;
 				tok.type = RCR_TOK;
 			}
-
 		}
 		else if(isdigit(c))
 		{
-			unsigned int num = 0;
+			unsigned int num = (c -'0');
+			c = l->str[l->pos];
 			while(isdigit(c))
 			{
-				num = num*10 + (c -'0');
-				c = l->str[l->pos];
+				num = num * 10 + (c -'0');
 				l->pos++;
+				c = l->str[l->pos];
 			}
 			if(!l->has_num1 || (l->has_num1 && l->past_comma && !l->has_num2))
 			{
@@ -89,7 +89,7 @@ token read_token(lexer* l)
 				}
 				else
 				{
-					l->has_num2 =1;
+					l->has_num2 = 1;
 				}
 			}
 		}

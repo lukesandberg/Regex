@@ -91,6 +91,13 @@ static char* TestCountedRepetitions()
 	token t = read_token(&l);
 	mu_assert("should be char", t.type == CHAR_TOK);
 	mu_assert("should be \\ value", t.v.char_value == 'a');
+	t = read_token(&l);
+	mu_assert("should be LCR_TOK", t.type == LCR_TOK);
+	t = read_token(&l);
+	mu_assert("should be NUM_TOK", t.type == NUM_TOK);
+	mu_assert("value should be 2", t.v.num_value==2);
+	t = read_token(&l);
+	mu_assert("should be RCR_TOK", t.type == RCR_TOK);
 	return NULL;
 }
 
@@ -102,4 +109,5 @@ void test_lexer()
 	mu_run_test(TestCharClasses);
 	mu_run_test(TestEscapeSequences);
 	mu_run_test(TestInvalid);
+	mu_run_test(TestCountedRepetitions);
 }

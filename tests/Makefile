@@ -16,7 +16,7 @@ $(EXE) : $(OBJS) $(LIB)
 clean:
 	$(ECHO) cleaning testb
 	$(RM) -f $(OBJS)
-	$(RM) $(EXE)
+	$(RM) -f $(EXE)
 
 depend: Makefile $(SRCS)
 	makedepend $(INCLUDES) $(SRCS) Makefile
