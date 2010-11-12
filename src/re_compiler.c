@@ -134,7 +134,7 @@ static inline void compile_crep(struct compile_state *state, loop_node* n)
 	split->v.split.left = L2;
 
 	instruction* dgt = state->inst;
-	dgt->op = I_DGT;
+	dgt->op = I_DGTEQ;
 	dgt->v.comparison.idx = reg;
 	dgt->v.comparison.comp = n->max;
 	state->inst++;
@@ -336,7 +336,7 @@ static inline void modify_indices(instruction* inst, size_t len, size_t offset)
 	for(unsigned int i = 0; i < len; i++)
 	{
 		op_code op = inst->op;
-		if(op == I_DGT || op == I_DLT)
+		if(op == I_DGTEQ || op == I_DLT)
 		{
 			inst->v.comparison.idx += offset;
 		}

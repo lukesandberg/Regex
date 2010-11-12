@@ -58,7 +58,7 @@ static char* TestLoop()
 	mu_assert("first inst is setz", prog->code[0].op == I_SETZ);
 	mu_assert("setz reg should be 0", prog->code[0].v.idx == 0);
 	mu_assert("second inst is split", prog->code[1].op == I_SPLIT);
-	mu_assert("third inst is dgt", prog->code[2].op == I_DGT);
+	mu_assert("third inst is dgt", prog->code[2].op == I_DGTEQ);
 	mu_assert("dgt comparison should be reg 0 <= 3", prog->code[2].v.comparison.idx == 0 && prog->code[2].v.comparison.comp == 3);
 	mu_assert("fourth inst is setz", prog->code[3].op == I_CHAR);
 	mu_assert("fifth inst is rule", prog->code[4].op == I_INCR);

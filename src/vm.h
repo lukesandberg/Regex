@@ -13,7 +13,7 @@ typedef enum
 	I_SPLIT,
 	I_MATCH,
 	I_SAVE,
-	I_DGT,
+	I_DGTEQ,
 	I_DLT,
 	I_SETZ,
 	I_INCR

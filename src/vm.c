@@ -38,7 +38,7 @@ void print_instruction(instruction *pc, size_t ind )
 		case I_INCR:
 			printf("INCR: %i", pc->v.idx);
 			break;
-		case I_DGT:
+		case I_DGTEQ:
 			printf("DGT: %i %i", pc->v.comparison.idx, pc->v.comparison.comp);
 			break;
 		case I_DLT:

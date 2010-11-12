@@ -53,9 +53,9 @@ tailcall:
 					return 0;
 				pc_index++;
 				goto tailcall;
-			case I_DGT:
+			case I_DGTEQ:
 				reg_val = ts->regs[pc->v.comparison.idx];
-				if(reg_val > pc->v.comparison.comp)
+				if(reg_val >= pc->v.comparison.comp)
 				{
 					ts_decref(state->cache, ts);
 				}
@@ -83,7 +83,7 @@ tailcall:
 				goto tailcall;
 			case I_INCR:
 				reg_val = ts->regs[pc->v.idx];
-				ts = ts_update(state->cache, ts, pc->v.idx, reg_val);
+				ts = ts_update(state->cache, ts, pc->v.idx, reg_val + 1);
 				pc_index++;
 				goto tailcall;
 			case I_CHAR:
@@ -114,8 +114,6 @@ static void free_list(struct re_run_state* state, sparse_map* lst)
 	}
 	free_sparse_map(lst);
 }
-
-
 
 static inline capture_group* extract_capture_groups(regex* re, thread_state* ts)
 {
@@ -190,15 +188,14 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 							//our thread is essentially dead so decref to return to the cache
 							ts_decref(state.cache, ts);
 							ts = NULL;
-						}
-						
+						}						
 						goto end; 
 					}
 					break;
 				case I_JMP:
 				case I_SPLIT:
 				case I_SAVE:
-				case I_DGT:
+				case I_DGTEQ:
 				case I_DLT:
 				case I_SETZ:
 				case I_INCR:
@@ -231,8 +228,6 @@ end:
 		free_list(&state, clst);
 	if(state.cache != NULL)
 		free_ts_cache(state.cache);
-	if(ts != NULL)
-		free(ts);
 	return rval;
 }
 
