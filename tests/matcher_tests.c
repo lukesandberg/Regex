@@ -1,6 +1,6 @@
 #include "matcher_tests.h"
 #include "minunit.h"
-#include <regex.h>
+#include <re.h>
 #include <stdlib.h>
 #include <stdio.h>
 

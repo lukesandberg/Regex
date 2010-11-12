@@ -1,6 +1,20 @@
 This project was designed to learn more about finite state machines 
 and in general good c design.
 
+11/11/2010
+after a long break...there has been many changes
+ * a header file for exported symbols "src/re.h" if you want to use the project you should
+ include that file and link with the librar
+ * building the re code as a library libre.a
+ * simplified makefiles with seperate makefiles for the tests and the lib
+ * implemented counted repetition support, corresponding tests need to be added
+ * switched from using instruction tags to test if we have already executed an instruction
+ to explicitly tracking the instructions executed at each step with a sparse_set
+ * added the corresponding sparse set implementation
+ * refactored the lexer somewhat... more work to be done
+ * and about 5 million more refactorings
+
+
 9/12/2010
 captures are fully implemented and working, they (as with everything) need more
 tests.  Copious interactive testing (via ./testre c...) so i feel pretty good 

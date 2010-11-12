@@ -32,6 +32,18 @@ void print_instruction(instruction *pc, size_t ind )
 		case I_MATCH:
 			printf("MATCH");
 			break;
+		case I_SETZ:
+			printf("SETZ: %i", pc->v.idx);
+			break;
+		case I_INCR:
+			printf("INCR: %i", pc->v.idx);
+			break;
+		case I_DGT:
+			printf("DGT: %i %i", pc->v.comparison.idx, pc->v.comparison.comp);
+			break;
+		case I_DLT:
+			printf("DLT: %i %i", pc->v.comparison.idx, pc->v.comparison.comp);
+			break;
 	}
 }
 

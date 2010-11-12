@@ -47,18 +47,18 @@ int main(int argc, char**argv)
 	{
 		char* re = argv[2];
 		char* str = argv[3];
-		capture_group* caps;
-		int m = capture(re, str, &caps);	
+		capture_group* cg;
+		int m = capture(re, str, &cg);
 		printf("%s matches %s:\t%s\n", str, re, m ? "true": "false");
 		if(m)
 		{
-			for(unsigned int i = 0 ; i < cg_num_captures(caps); i++)
+			for(unsigned int i = 0 ; i < cg_get_num_captures(cg); i++)
 			{
 				char *end = NULL;
-				char* start = cg_get_cap(caps, i, &end);
+				char* start = cg_get_capture(cg, i, &end);
 				printf("%i:\t%.*s\n", i/2, (end - start + 1), start);
 			}
-			free(caps);
+			free(cg);
 		}
 	}
 	else if(argc >= 2 && argv[1][0] == 'f')//fuzz

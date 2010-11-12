@@ -329,26 +329,25 @@ static size_t program_size(ast_node* n)
 	dassert(0, "unexpected case");
 	return 0;
 }
-static void inline modify_indices(instruction* inst, size_t len, size_t offset)
+static inline void modify_indices(instruction* inst, size_t len, size_t offset)
 {
-	for(int i = 0; i < len; i++)
+	for(unsigned int i = 0; i < len; i++)
 	{
 		op_code op = inst->op;
 		if(op == I_DGT || op == I_DLT)
 		{
-			inst->comparison.idx += offset;
+			inst->v.comparison.idx += offset;
 		}
 		else if(op == I_SETZ || op == I_INCR)
 		{
-			inst.idx += offset;
+			inst->v.idx += offset;
 		}
-
 		inst++;
 	}
 }
 
 
-program* compile_regex(char* str, re_error* error, size_t *num_regs)
+program* compile_regex(char* str, re_error* error, size_t *num_regs, size_t* num_capture_regs)
 {
 	ast_node* tree = re_parse(str, error);
 	if(tree == NULL)
@@ -380,8 +379,9 @@ program* compile_regex(char* str, re_error* error, size_t *num_regs)
 	compile_recursive(&state, tree);
 	compile_op(&state, I_MATCH);//last instruction should always be a match
 	*num_regs = state.next_save_reg  + state.max_loop_vars;
-
-	modify_indices(state->first, sz, state.next_save_reg);
+	*num_capture_regs = state.next_save_reg;
+	
+	modify_indices(state.first, sz, state.next_save_reg);
 
 end:
 	free_node(tree);

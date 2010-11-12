@@ -28,12 +28,12 @@ typedef struct _inst_s
 		unsigned int save_register;
 		unsigned int idx;//for setz incr instructions
 		unsigned int jump;
-		struct
+		struct s_s
 		{
 			unsigned int left;
 			unsigned int right;
 		} split;
-		struct
+		struct c_s
 		{
 			unsigned int idx;
 			unsigned int comp;

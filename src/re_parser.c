@@ -173,7 +173,7 @@ static ast_node* parse_counted_rep(fat_stack* tok_stk, re_error*er)
 	if(sub == NULL)
 	{
 		//fix our error message
-		parse_error(E_MISSING_OP_ARGUMENT, tok.position);
+		parse_error(E_MISSING_OP_ARGUMENT, er->position);
 		return NULL;
 	}
 	ast_node* n = (ast_node*)  make_loop(sub, min, max);
@@ -409,7 +409,7 @@ ast_node* re_parse(char *regex, re_error* er)
 	lexer lxr;
 	init_lexer(&lxr, regex);
 	
-	fat_stack* stk = read_all_tokens(lxr, er);
+	fat_stack* stk = read_all_tokens(&lxr, er);
 	if(stk == NULL)
 		return NULL;
 	ast_node* tree = parse_reg(stk, er);

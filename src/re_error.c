@@ -1,4 +1,4 @@
-#include "re_error.h"
+#include <re.h>
 #include <stdio.h>
 
 static const char *error_messages[NUM_ERROR_CODES] = 

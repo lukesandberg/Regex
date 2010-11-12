@@ -1,5 +1,7 @@
 #ifndef __FAT_STACK_H__
 #define __FAT_STACK_H__
+#include <stdlib.h>
+
 typedef struct fat_stack_entry_s
 {
 	struct fat_stack_entry_s* next;

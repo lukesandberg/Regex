@@ -40,10 +40,10 @@ typedef struct
 typedef struct
 {
 	char* str;
-	unsigned int:1 in_cr;
-	unsigned int:1 has_num1;
-	unsigned int:1 has_num2;
-	unsigned int:1 past_comma;
+	unsigned int in_cr:1;
+	unsigned int has_num1:1;
+	unsigned int has_num2:1;
+	unsigned int past_comma:1;
 	unsigned int pos;
 } lexer;
 

@@ -5,8 +5,8 @@
 
 static char* TestSingleMatch()
 {
-	size_t nr;
-	program* prog = compile_regex("a", NULL, &nr);
+	size_t nr, nc;
+	program* prog = compile_regex("a", NULL, &nr, &nc);
 	mu_assert("program length", prog->size ==  2);
 	mu_assert("first inst is rule", prog->code[0].op == I_CHAR);
 	mu_assert("second inst is match", prog->code[1].op == I_MATCH);
@@ -16,8 +16,8 @@ static char* TestSingleMatch()
 
 static char* TestStar()
 {
-	size_t nr;
-	program* prog = compile_regex("a*", NULL, &nr);
+	size_t nr, nc;
+	program* prog = compile_regex("a*", NULL, &nr, &nc);
 	mu_assert("program length", prog->size ==  4);
 	mu_assert("first inst is split", prog->code[0].op == I_SPLIT);
 	mu_assert("second inst is rule", prog->code[1].op == I_CHAR);
@@ -29,8 +29,8 @@ static char* TestStar()
 
 static char* TestConcat()
 {
-	size_t nr;
-	program* prog = compile_regex("ab", NULL, &nr);
+	size_t nr, nc;
+	program* prog = compile_regex("ab", NULL, &nr, &nc);
 	mu_assert("program length", prog->size ==  3);
 	mu_assert("first inst is split", prog->code[0].op == I_CHAR);
 	mu_assert("second inst is rule", prog->code[1].op == I_CHAR);
@@ -40,9 +40,9 @@ static char* TestConcat()
 }
 static char* TestInvalid()
 {
-	size_t nr;
+	size_t nr, nc;
 	re_error er;
-	program* prog = compile_regex("*", &er, &nr);
+	program* prog = compile_regex("*", &er, &nr, &nc);
 	mu_assert("program is NULL", prog == NULL);
 	mu_assert("error is unexpected star", er.errno = E_UNEXPECTED_TOKEN);
 	return NULL;
