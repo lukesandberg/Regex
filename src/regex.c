@@ -4,20 +4,13 @@
 #include <util/util.h>
 #include <util/sparse_map.h>
 #include <thread_state.h>
-#include <re.h>
+
 #include <capture_group.h>
-#include <stdlib.h>
+
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-
-struct regex_s
-{
-	char* src;
-	size_t num_registers;
-	program *prog;
-	size_t num_capture_regs;
-};
+#include <regex.h>
 
 struct re_run_state
 {

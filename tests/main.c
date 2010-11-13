@@ -21,13 +21,24 @@ void run_tests()
 	mu_print_summary();
 }
 
+static void print_usage(char* prog_name)
+{
+	char* usage_format = "\t%s %-20s\t%s\n";
+	printf("usage:\n");
+	printf(usage_format, prog_name, "[t]", "unit tests");
+	printf(usage_format, prog_name, "f [count=inf]", "fuzz test");
+	printf(usage_format, prog_name, "p [count=1000]","performance tests");
+	printf(usage_format, prog_name, "r <regex> <str>", "test if regex matches");
+	printf(usage_format, prog_name, "c <regex> <str>", "test for match and extract captures");
+}
+
 int main(int argc, char**argv)
 {
 	if(argc == 2 && argv[1][0] == 'p')
 	{
 		test_performance(1000l);
 	}
-	if(argc == 3 && argv[1][0] == 'p')
+	else if(argc == 3 && argv[1][0] == 'p')
 	{
 		long long n = atoll(argv[2]);
 		test_performance(n);
@@ -61,17 +72,16 @@ int main(int argc, char**argv)
 			free(cg);
 		}
 	}
-	else if(argc >= 2 && argv[1][0] == 'f')//fuzz
+	else if(argc == 2 && argv[1][0] == 'f')//fuzz
 	{
-		unsigned int count = 0;
-		if(argc == 3)
-		{
-			count = (unsigned int) atoll(argv[2]);
-		}
-		fuzz_test(count);
+		fuzz_test(0);
+	}
+	else if(argc == 3 && argv[1][0] == 'f')//fuzz
+	{
+		fuzz_test((unsigned int) atoll(argv[2]));
 	}
 	else
 	{
-		printf("usage:\n\t%s p\tperformance tests\n\t%s t\tunit tests\n", argv[0], argv[0]);
+		print_usage(argv[0]);
 	}
 }

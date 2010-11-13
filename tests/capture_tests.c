@@ -2,6 +2,9 @@
 #include "minunit.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <vm.h>
+#include <regex.h>
 
 int capture(char* re_str, char* str, capture_group** cg)
 {
@@ -13,7 +16,7 @@ int capture(char* re_str, char* str, capture_group** cg)
 	return m;
 }
 
-char* TestCaptureEverything()
+static char* TestCaptureEverything()
 {
 	capture_group* cg;
 	mu_assert("should match", capture("(.*)", "adsfasdf", &cg));
@@ -26,9 +29,46 @@ char* TestCaptureEverything()
 	return NULL;
 }
 
+static char* TestCaptureGreediness()
+{
+	capture_group* cg;
+	mu_assert("should match", capture("(.*)df", "asdfasdf", &cg));
+	char* start;
+	char* end;
+	start = cg_get_capture(cg, 0, &end);
+	mu_assert("greedy capture should match asdfas", strncmp(start, "asdfas", 6) == 0);
+	free(cg);
+
+	mu_assert("should match", capture("(.*?)df", "asdfasdf", &cg));
+	start = cg_get_capture(cg, 0, &end);
+	mu_assert("non greedy capture should match asdfas", strncmp(start, "as", 2) == 0);
+	free(cg);
+	return NULL;
+}
+
+static char* TestCountedRepCapture()
+{
+	capture_group* cg;
+	char* start;
+	char* end;
+	re_error er;
+	regex* re = regex_create("(ab){2}.*", &er);
+	if(re == NULL) return 0;
+	int m = regex_matches(re, "ababghjk", &cg);
+	regex_destroy(re);
+	print_program(re->prog);
+	mu_assert("should match", m);
+	start = cg_get_capture(cg, 0, &end);
+	mu_assert("capture should match rep", strncmp(start, "abab", 4) == 0);
+	free(cg);
+	return NULL;
+}
+
 void test_captures()
 {
 	printf("Testing Captures\n");
 	mu_run_test(TestCaptureEverything);
+	mu_run_test(TestCaptureGreediness);
+	mu_run_test(TestCountedRepCapture);
 }
 

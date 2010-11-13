@@ -16,26 +16,28 @@ Launch Configurations=Launch Configuration 0
 [Launch][Launch Configuration 0]
 Configured Launch Modes=execute
 Configured Launchers=nativeAppLauncher
-Name=New Native Application Configuration
+Name=TestSuite
 Type=Native Application
 
 [Launch][Launch Configuration 0][Data]
-Arguments=
+Arguments=t
 Debugger Shell=
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
-Dependency Action=Nothing
+Dependency Action=Build
 Display Demangle Names=true
 Display Static Members=true
 EnvironmentGroup=default
-Executable=file:///home/luke/Regex/build/testre
+Executable=file:///home/luke/regex/Regex/build/testre
 GDB Path=file:///usr/bin/gdb
 Remote GDB Config Script=
 Remote GDB Run Script=
 Remote GDB Shell Script=
 Try Setting Breakpoints On Loading Libraries=true
-Working Directory=
+Working Directory=file:///home/luke/regex/Regex
 isExecutable=true
 
 [MakeBuilder]
 Default Target=test
+Make Binary=/usr/bin/make
 Number Of Jobs=1
+Su Command=1

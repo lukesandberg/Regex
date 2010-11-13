@@ -1,21 +1,21 @@
 #include <vm.h>
 #include <stdio.h>
 
-void print_instruction(instruction *pc, size_t ind )
+void print_instruction(instruction *pc)
 {
 	switch(pc->op)
 	{
 		case I_SAVE:
-			printf("CHAR: %c", pc->v.save_register);
+			printf("SAVE: %i", pc->v.save_register);
 			break;
 		case I_CHAR:
 			printf("CHAR: %c", pc->v.c);
 			break;
 		case I_JMP:
-			printf("JMP: %i", ind + (int)(pc - pc->v.jump));
+			printf("JMP: %i", pc->v.jump);
 			break;
 		case I_SPLIT:
-			printf("SPLIT: %i %i", ind + (int)(pc - pc->v.split.left),ind + (int)(pc - pc->v.split.right));
+			printf("SPLIT: %i %i", pc->v.split.left, pc->v.split.right);
 			break;
 		case I_ALPHA:
 			printf("ALPHA");
@@ -55,7 +55,7 @@ void print_program(program* prog)
 	{
 		printf("%i:\t", i);
 		instruction *pc = &(prog->code[i]);
-		print_instruction(pc, i);
+		print_instruction(pc);
 		printf("\n");
 	}
 }

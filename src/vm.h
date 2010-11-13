@@ -48,7 +48,7 @@ typedef struct
 }program;
 
 void print_program(program* prog);
-void print_instruction(instruction *pc, size_t index);
+void print_instruction(instruction *pc);
 
 
 

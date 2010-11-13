@@ -99,7 +99,7 @@ static char* TestCountedRepetitions()
 	t = read_token(&l);
 	mu_assert("should be RCR_TOK", t.type == RCR_TOK);
 
-	init_lexer(&l, "a{2  ,3 }");
+	init_lexer(&l, "a{2  ,3 }.*");
 	t = read_token(&l);
 	mu_assert("should be char", t.type == CHAR_TOK);
 	mu_assert("should be a value", t.v.char_value == 'a');
@@ -114,6 +114,10 @@ static char* TestCountedRepetitions()
 	mu_assert("should be NUM_TOK", t.type == NUM_TOK);
 	t = read_token(&l);
 	mu_assert("should be RCR_TOK", t.type == RCR_TOK);
+	t = read_token(&l);
+	mu_assert("should be WILDCARD_TOK", t.type == WILDCARD_TOK);
+	t = read_token(&l);
+	mu_assert("should be STAR_TOK", t.type == STAR_TOK);
 	return NULL;
 }
 

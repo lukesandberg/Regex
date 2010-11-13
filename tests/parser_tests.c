@@ -56,7 +56,6 @@ static char* TestConcat()
 {
 	re_error er;
 	ast_node* tree;
-		
 	tree = re_parse("ab", &er);
 	mu_assert("should be a valid parse", er.errno == E_SUCCESS);
 	mu_assert("should be a concat node", tree->type == CONCAT);
@@ -124,7 +123,7 @@ static char* TestNullError()
 
 static char* TestCountedRepetition()
 {
-    	re_error er;
+	re_error er;
 	ast_node* tree = re_parse("a{2}", &er);
 	if(tree == NULL)
 	{
@@ -154,7 +153,7 @@ static char* TestCountedRepetition()
 }
 static char* TestCountedRepetitionGroup()
 {
-    	re_error er;
+	re_error er;
 	ast_node* tree = re_parse("(abc){2}", &er);
 	if(tree == NULL)
 	{
@@ -170,6 +169,35 @@ static char* TestCountedRepetitionGroup()
 	free_node(tree);
 	return NULL;
 }
+
+static char* TestCountedRepetitionSequence()
+{
+	re_error er;
+	ast_node* tree = re_parse("a{2}.*", &er);
+	if(tree == NULL)
+	{
+	    return (char*) re_error_description(er);
+	}
+	mu_assert("should be a concat node", tree->type == CONCAT);
+	multi_node* cn = (multi_node*) tree;
+	linked_list_node* n = linked_list_first(cn->list);
+	mu_assert("first should be a loop", ((ast_node*) linked_list_value(n))->type == CREP);
+
+	loop_node* ln = (loop_node*) linked_list_value(n);
+	mu_assert("min loop range should be 2", ln->min == 2);
+	mu_assert("max loop range should be 2", ln->max == 2);
+	mu_assert("expr should be CHAR expr", ln->base.expr->type==CHAR);
+	mu_assert("expr should be a value", ((char_node*)(ln->base.expr))->c=='a');
+
+	n = linked_list_next(n);
+	mu_assert("next should be a STAR", ((ast_node*) linked_list_value(n))->type == STAR);
+	unary_node* un = (unary_node*) linked_list_value(n);
+	mu_assert("should be a match inside the star", un->expr->type == WILDCARD);
+	
+	free_node(tree);
+	return NULL;
+}
+
 void test_parser()
 {
 	printf("Testing parser\n");
@@ -185,4 +213,5 @@ void test_parser()
 	mu_run_test(TestNullError);
 	mu_run_test(TestCountedRepetition);
 	mu_run_test(TestCountedRepetitionGroup);
+	mu_run_test(TestCountedRepetitionSequence);
 }

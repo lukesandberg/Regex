@@ -94,13 +94,23 @@ char* TestSubExpression()
 char* TestCountedRep()
 {
 	mu_assert("basic counted rep match: \"a{2}\", \"aa\"", match("a{2}", "aa"));
+	mu_assert("range counted rep no match: \"a{2,4}\", \"a\"", !match("a{2,4}", "a"));
 	mu_assert("range counted rep match: \"a{2,4}\", \"aa\"", match("a{2,4}", "aa"));
 	mu_assert("range counted rep match: \"a{2,4}\", \"aaa\"", match("a{2,4}", "aaa"));
 	mu_assert("range counted rep match: \"a{2,4}\", \"aaaa\"", match("a{2,4}", "aaaa"));
 	mu_assert("range counted rep no match: \"a{2,4}\", \"aaaaa\"", !match("a{2,4}", "aaaaa"));
 	return NULL;
 }
-
+char* TestGroupRepetitions()
+{
+	mu_assert("basic group counted rep match: \"(abc){2}\", \"aa\"", match("(abc){2}", "abcabc"));
+	mu_assert("range group counted rep no match: \"(abc){2,4}\", \"abc\"", !match("(abc){2,4}", "abc"));
+	mu_assert("range group counted rep match: \"(abc){2,4}\", \"abcabc\"", match("(abc){2,4}", "abcabc"));
+	mu_assert("range group counted rep match: \"(abc){2,4}\", \"abcabcabc\"", match("(abc){2,4}", "abcabcabc"));
+	mu_assert("range group counted rep match: \"(abc){2,4}\", \"abcabcabcabc\"", match("(abc){2,4}", "abcabcabcabc"));
+	mu_assert("range group counted rep no match: \"(abc){2,4}\", \"abcabcabcabcabc\"", !match("(abc){2,4}", "abcabcabcabcabc"));
+	return NULL;
+}
 void  test_matcher()
 {
 	printf("Testing Matcher\n");
@@ -115,4 +125,5 @@ void  test_matcher()
 	mu_run_test(TestAlternation);
 	mu_run_test(TestSubExpression);
 	mu_run_test(TestCountedRep);
+	mu_run_test(TestGroupRepetitions);
 }
