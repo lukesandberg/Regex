@@ -10,7 +10,7 @@ LIB=../build/$(LIBNAME)
 all: $(LIB)
 
 $(LIB) : $(OBJS)
-	$(AR) $(ARFLAGS) r $(LIB) $?
+	$(AR) $(ARFLAGS) r $(LIB) $(OBJS)
 	$(RANLIB) $(LIB)
 
 clean:
@@ -19,7 +19,7 @@ clean:
 	$(RM) $(LIB)
 
 depend: Makefile $(SRCS)
-	makedepend $(INCLUDES) $(SRCS) Makefile
+	makedepend -Y $(INCLUDES) $(SRCS) Makefile
 	
 # DO NOT DELETE
 
