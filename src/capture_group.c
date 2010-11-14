@@ -3,8 +3,8 @@
 
 char* cg_get_capture(capture_group* cg, unsigned int n, char**end)
 {
-  *end = cg->regs[n+1];
-  return cg->regs[n];
+  *end = cg->regs[2*n+1];
+  return cg->regs[2*n];
 }
 unsigned int cg_get_num_captures(capture_group* cg)
 {

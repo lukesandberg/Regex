@@ -67,7 +67,7 @@ int main(int argc, char**argv)
 			{
 				char *end = NULL;
 				char* start = cg_get_capture(cg, i, &end);
-				printf("%i:\t%.*s\n", i/2, (end - start + 1), start);
+				printf("%i:\t%.*s\n", i/2, (end - start), start);
 			}
 			free(cg);
 		}

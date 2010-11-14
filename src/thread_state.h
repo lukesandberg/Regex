@@ -3,13 +3,12 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 
 typedef struct _ts_s
 {
 	size_t nref;
 	size_t sz;
-	uintptr_t regs[];
+	unsigned int regs[];
 } thread_state;
 
 typedef struct _tsc_s
@@ -45,7 +44,7 @@ static inline thread_state* make_thread_state(ts_cache* cache, size_t sz)
 	}
 	else
 	{
-		c = (thread_state*) malloc(sizeof(thread_state) + sizeof(uintptr_t) * sz);
+		c = (thread_state*) malloc(sizeof(thread_state) + sizeof(unsigned int) * sz);
 		if(c == NULL) return NULL;
 		c->sz = sz;
 	}
@@ -76,9 +75,9 @@ static inline thread_state* ts_update(ts_cache* cache, thread_state* c, unsigned
 		c->nref--;
 		r = make_thread_state(cache, c->sz);
 		if(r == NULL) return NULL;
-		memcpy(&(r->regs[0]), &(c->regs[0]), sizeof(uintptr_t) * c->sz);
+		memcpy(&(r->regs[0]), &(c->regs[0]), sizeof(unsigned int) * c->sz);
 	}
-	r->regs[i] = (uintptr_t)v;
+	r->regs[i] = v;
 	return r;
 }
 

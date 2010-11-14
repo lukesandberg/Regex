@@ -24,7 +24,7 @@ static char* TestCaptureEverything()
 	char* end;
 	start = cg_get_capture(cg, 0, &end);
 	mu_assert("first char should be a", *start == 'a');
-	mu_assert("last char should be f", *end == 'f');
+	mu_assert("last char should be f", *end == '\0');
 	free(cg);
 	return NULL;
 }
@@ -49,26 +49,29 @@ static char* TestCaptureGreediness()
 static char* TestCountedRepCapture()
 {
 	capture_group* cg;
-	char* start;
-	char* end;
-	re_error er;
-	regex* re = regex_create("(ab){2}.*", &er);
-	if(re == NULL) return 0;
-	int m = regex_matches(re, "ababghjk", &cg);
-	regex_destroy(re);
-	print_program(re->prog);
-	mu_assert("should match", m);
+	char *start, *end;
+	mu_assert("should match", capture("(ab){2}.*", "ababghjk", &cg));
 	start = cg_get_capture(cg, 0, &end);
-	mu_assert("capture should match rep", strncmp(start, "abab", 4) == 0);
+	mu_assert("capture should match ab", strncmp(start, "ab", 2) == 0);
 	free(cg);
 	return NULL;
 }
-
+static char* TestStarCaptureInteraction()
+{
+	capture_group* cg;
+	char *start, *end;
+	mu_assert("should match", capture("(ab)*", "abab", &cg));
+	start = cg_get_capture(cg, 0, &end);
+	mu_assert("capture should match ab", strncmp(start, "ab", 2) == 0);
+	free(cg);
+	return NULL;
+}
 void test_captures()
 {
 	printf("Testing Captures\n");
 	mu_run_test(TestCaptureEverything);
 	mu_run_test(TestCaptureGreediness);
 	mu_run_test(TestCountedRepCapture);
+	mu_run_test(TestStarCaptureInteraction);
 }
 

@@ -15,12 +15,12 @@
 struct re_run_state
 {
 	regex* re;
-	char *c;
+	char* str;
 	ts_cache* cache;
 };
 
 
-static int add_to_list(struct re_run_state *state, sparse_map* map, unsigned int pc_index, thread_state* ts)
+static int add_to_list(struct re_run_state *state, sparse_map* map, unsigned int pc_index, thread_state* ts, char* c)
 {
 	unsigned int reg_val = 0;
 tailcall:
@@ -36,12 +36,12 @@ tailcall:
 			case I_SPLIT:
 				ts_incref(ts);
 				//can't avoid recursion here
-				if(add_to_list(state, map, pc->v.split.left, ts) == 0)
+				if(add_to_list(state, map, pc->v.split.left, ts, c) == 0)
 					return 0;//propgate error
 				pc_index = pc->v.split.right;
 				goto tailcall;
 			case I_SAVE:
-				ts = ts_update(state->cache, ts, pc->v.save_register, (unsigned int) state->c);
+				ts = ts_update(state->cache, ts, pc->v.save_register, (unsigned int) (c - state->str));
 				if(ts == NULL)
 					return 0;
 				pc_index++;
@@ -108,10 +108,18 @@ static void free_list(struct re_run_state* state, sparse_map* lst)
 	free_sparse_map(lst);
 }
 
-static inline capture_group* extract_capture_groups(regex* re, thread_state* ts)
+static inline capture_group* extract_capture_groups(struct re_run_state* state, thread_state* ts)
 {
-	capture_group* cg = (capture_group*) malloc(sizeof(capture_group) + sizeof(char*) * re->num_capture_regs);
-	memcpy(cg->regs, ts->regs, re->num_capture_regs*sizeof(char*));
+	capture_group* cg = (capture_group*) malloc(sizeof(capture_group) + sizeof(char*) * state->re->num_capture_regs);
+	if(cg == NULL)
+		return NULL;
+	unsigned int len = state->re->num_capture_regs;
+	char* str = state->str;
+	for(unsigned int i = 0; i < len; i++)
+	{
+		cg->regs[i] = str + ts->regs[i];
+	}
+	cg->sz = len;
 	return cg;
 }
 
@@ -121,6 +129,7 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 	sparse_map *clst = NULL;
 	sparse_map *nlst = NULL;
 	thread_state* ts = NULL;
+	char* c = str;
 	program *prog = re->prog;
 	size_t len = prog->size;
 	
@@ -132,14 +141,14 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 		goto end;
 	struct re_run_state state;
 	state.re = re;
-	state.c = str;
+	state.str = str;
 	state.cache = make_ts_cache(len);
 	if(state.cache == NULL)
 		goto end;
 	ts = make_thread_state(state.cache, re->num_registers);
 	if(ts == NULL)
 		goto end;
-	if(!add_to_list(&state, clst, 0, ts))
+	if(!add_to_list(&state, clst, 0, ts, c))
 		goto end;
 	rval = 0;
 	do
@@ -148,40 +157,40 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 		{
 			void* val = NULL;
 			unsigned int pc_index = sparse_map_get_entry(clst, i, &val);
-
 			instruction* pc = prog->code + pc_index;
 			ts = (thread_state*) val;
 			int v = 0;
 			switch(pc->op)
 			{
 				case I_CHAR:
-					v = (pc->v.c == *state.c);
+					v = (pc->v.c == *c);
 					break;
 				case I_ALPHA:
-					v = isalpha(*state.c);
+					v = isalpha(*c);
 					break;
 				case I_WHITESPACE:
-					v = isspace(*state.c);
+					v = isspace(*c);
 					break;
 				case I_DIGIT:
-					v = isdigit(*state.c);
+					v = isdigit(*c);
 					break;
 				case I_WILDCARD:
-					v = (*state.c != '\0');
+					v = (*c != '\0');
 					break;
 				case I_MATCH:
 					v = 0;//we never actually go past this
-					rval = (*state.c == '\0');
+					rval = (*c == '\0');
 					if(rval)//we are at the end (all matches are anchored)
 						//by default
 					{
 						if(r_caps != NULL)
 						{
-							*r_caps = extract_capture_groups(re, ts);
-							//our thread is essentially dead so decref to return to the cache
-							ts_decref(state.cache, ts);
-							ts = NULL;
-						}						
+							*r_caps = extract_capture_groups(&state, ts);
+							if(*r_caps == NULL) //extraction failed
+							{
+								rval = -1;//oom error
+							}
+						}
 						goto end; 
 					}
 					break;
@@ -197,7 +206,7 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 			}
 			if(v > 0)//we did pass the test
 			{
-				if(add_to_list(&state, nlst, pc_index + 1, ts) == 0)
+				if(add_to_list(&state, nlst, pc_index + 1, ts, c + 1) == 0)
 					//we ran out of memory... darn it
 					goto end;
 			}
@@ -211,13 +220,13 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 		nlst = clst;
 		sparse_map_clear(nlst);
 		clst = tmp;
-	} while(*state.c++ != '\0');
+	} while(*c++ != '\0');
 
 
 end:
 	if(nlst != NULL)//kill all pending threads
 		free_list(&state, nlst);
-	if(clst != NULL)
+	if(clst != NULL)//kill all the remaining threads
 		free_list(&state, clst);
 	if(state.cache != NULL)
 		free_ts_cache(state.cache);
