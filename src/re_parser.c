@@ -60,7 +60,7 @@ struct stack_token
 	enum
 	{
 		NODE,
-		TOKEN
+		TOKEN,
 	} type;
 	union
 	{
@@ -69,9 +69,28 @@ struct stack_token
 	} v;
 };
 
-static void handle_unary_op(struct parse_state* state, node_type type)
+static int handle_unary_op(struct parse_state* state, node_type type, re_error er)
 {
-	
+	stack_token tok = fat_stack_peek(state->tokens);
+	fat_stack_pop(state->tokens);
+	if(tok.type == NODE)
+	{
+		ast_node* node = tok.v.node;
+		unary_node* un = make_unary(node, type);
+		if(un == NULL)
+		{
+			parse_error(E_OUT_OF_MEMORY, -1);
+			return 0;
+		}
+		tok.v.node = un;
+		fat_stack_push(state->tokens, tok);
+		return 1;
+	}
+	else
+	{
+		parse_error(E_MISSING_OP_ARGUMENT, tok.v.tok.position);
+		return 0;
+	}
 }
 
 ast_node* re_parse_new(char* regex, re_error* er)
@@ -81,7 +100,7 @@ ast_node* re_parse_new(char* regex, re_error* er)
 	ast_node* tree = NULL;
 	struct parse_state state;
 	init_lexer(&state.lxr, regex);
-	state.tokens = fat_stack_create(sizeof(token));
+	state.tokens = fat_stack_create(sizeof(stack_token));
 	state.nlparens = 0;
 	state.nalts = 0;
 	if(state.tokens == NULL)
@@ -96,9 +115,10 @@ ast_node* re_parse_new(char* regex, re_error* er)
 		switch(tok.type)
 		{
 			case CHAR_TOK:
-			break;
+				//handle_char(&state, tok.v.char_value);
+				break;
 			case PLUS_TOK:
-				handle_unary_op(&state, PLUS_TOK);
+				if(!handle_unary_op(&state, PLUS_TOK)
 				break;
 			case QMARK_TOK:
 			break;
@@ -137,7 +157,7 @@ ast_node* re_parse_new(char* regex, re_error* er)
 				break;
 			case INVALID_TOK:
 				parse_error(E_INVALID_TOKEN, tok.position);
-				return NULL;
+				goto end;
 		}
 	}
 
