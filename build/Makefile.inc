@@ -1,5 +1,5 @@
 CC	= gcc -std=c99
-PRJCFLAGS = -Wall -Wextra -Werror -g
+PRJCFLAGS = -Wall -Wextra -Werror -O3
 LD	= gcc
 LDFLAGS	= 
 AR	= ar

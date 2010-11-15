@@ -4,4 +4,7 @@
 *~
 libre.a
 testre
-
+*.gcov
+*.gcda
+*.gcno
+gmon.out

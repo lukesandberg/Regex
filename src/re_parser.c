@@ -12,7 +12,7 @@ re:
 	| reg
 
 reg:
-	  reg | simple-re
+	  reg ALT_TOK simple-re
 	| simple-re
 
 simple-re:
@@ -20,13 +20,13 @@ simple-re:
 	| basic-re
 
 basic-re:
-	  basic-re STAR
-	| basic-re PLUS
-	| basic-re QMARK
+	  basic-re STAR_TOK
+	| basic-re PLUS_TOK
+	| basic-re QMARK_TOK
 	| basic-re LCR_TOK num RCR_TOK
-	| basic-re LCR_TOK num1, num2 RCR_TOK
+	| basic-re LCR_TOK num1 COMMA_TOK num2 RCR_TOK
 	| (reg)
-	| CHAR		
+	| CHAR_TOK
 
 */
 
@@ -41,6 +41,113 @@ static ast_node* parse_basic_re(fat_stack* tok_stk, re_error *er);
 static ast_node* parse_simple_re(fat_stack* tok_stk, re_error*er);
 static ast_node* parse_reg(fat_stack* tok_stk, re_error* er);
 static ast_node* parse_simple_re(fat_stack* tok_stk, re_error*er);
+static ast_node* handle_group(fat_stack* tok_stk, re_error *er);
+static int read_num(fat_stack* tok_stk, re_error *er, unsigned int* val);
+//0 is failure, 1 is comma, 2 is lbracket
+static int read_comma_or_lbracket(fat_stack* tok_stk, re_error * er);
+static inline fat_stack* read_all_tokens(lexer* lxr, re_error* er);
+
+struct parse_state
+{
+	lexer lxr;
+	fat_stack* tokens;
+	unsigned int nlparens;
+	unsigned int nalts;
+};
+
+struct stack_token
+{
+	enum
+	{
+		NODE,
+		TOKEN
+	} type;
+	union
+	{
+		ast_node* node;
+		token tok;
+	} v;
+};
+
+static void handle_unary_op(struct parse_state* state, node_type type)
+{
+	
+}
+
+ast_node* re_parse_new(char* regex, re_error* er)
+{
+	//default to success
+	parse_error(E_SUCCESS, -1);
+	ast_node* tree = NULL;
+	struct parse_state state;
+	init_lexer(&state.lxr, regex);
+	state.tokens = fat_stack_create(sizeof(token));
+	state.nlparens = 0;
+	state.nalts = 0;
+	if(state.tokens == NULL)
+	{
+		parse_error(E_OUT_OF_MEMORY, -1);
+		return NULL;
+	}
+	token tok;
+	
+	while((tok = read_token(&state.lxr)).type != END_TOK)
+	{
+		switch(tok.type)
+		{
+			case CHAR_TOK:
+			break;
+			case PLUS_TOK:
+				handle_unary_op(&state, PLUS_TOK);
+				break;
+			case QMARK_TOK:
+			break;
+			case ALT_TOK:
+			break;
+			case STAR_TOK:
+			break;
+			case WILDCARD_TOK:
+			break;
+			case DIGIT_TOK:
+			break;
+			case WHITESPACE_TOK:
+			break;
+			case ALPHA_TOK:
+			break;
+			case LPAREN_TOK:
+			break;
+			case RPAREN_TOK:
+			break;
+			case NG_STAR_TOK:
+			break;
+			case NG_PLUS_TOK:
+			break;
+			case NG_QMARK_TOK:
+			break;
+			case LCR_TOK:
+			break;
+			case RCR_TOK:
+			break;
+			case COMMA_TOK:
+			break;
+			case NUM_TOK:
+			break;
+			case END_TOK:
+				dassert(0, "impossible case");
+				break;
+			case INVALID_TOK:
+				parse_error(E_INVALID_TOKEN, tok.position);
+				return NULL;
+		}
+	}
+
+end:
+	fat_stack_destroy(state.tokens);
+
+	return tree;
+}
+
+
 
 static ast_node* handle_group(fat_stack* tok_stk, re_error *er)
 {
@@ -97,6 +204,7 @@ static ast_node* handle_group(fat_stack* tok_stk, re_error *er)
 	fat_stack_destroy(sub_stk);
 	return sub;
 }
+
 static int read_num(fat_stack* tok_stk, re_error *er, unsigned int* val)
 {
 	if(fat_stack_size(tok_stk) == 0)
@@ -361,6 +469,7 @@ static ast_node* parse_reg(fat_stack* tok_stk, re_error* er)
 		return NULL;
 	}
 }
+
 static inline fat_stack* read_all_tokens(lexer* lxr, re_error* er)
 {
 	//we need to read all of our tokens onto the stack

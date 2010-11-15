@@ -1,6 +1,15 @@
 This project was designed to learn more about finite state machines 
 and in general good c design.
 
+11/14/2010
+I am very confident about counted repetition expressions at this point. There are
+a number of passing tests that pretty well test the feature.  Next the parser will be
+refactored to decrease memory usage and recursive depth.  Currently we essentially copy
+the whole string as tokens to read it backwards.  This has overly complicated the parsing
+process so i think i will be switching to a forward parse technique storing a stack of
+already parsed sub expressions.  This should eliminate almost all recursion as well as
+allow for easier additions to the grammar.
+
 11/11/2010
 after a long break...there has been many changes
  * a header file for exported symbols "src/re.h" if you want to use the project you should

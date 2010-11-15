@@ -6,8 +6,6 @@
 //this should be useful as long as the max number of items in the map is known
 //and they can be represented as integers between 0....MAX_NUM
 
-
-
 /*
    This map allow O(1) insertion, O(N) iteration in the same
    order as insertion. O(1) clear time and O(1) containment test time,
@@ -17,6 +15,7 @@
    could be added but it would be O(N) in the worst and average cases, so
    it is not provided.
 */
+
 typedef struct _sparse_map_s sparse_map;
 
 sparse_map* make_sparse_map(size_t max);
