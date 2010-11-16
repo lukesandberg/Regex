@@ -54,6 +54,13 @@ struct parse_state
 	lexer lxr;
 	fat_stack* tokens;
 };
+enum stop_criteria
+{
+	SHOULD_STOP_AT_LPAREN = 0x1,
+	SHOULD_STOP_AT_END = 0x2,
+	SHOULD_STOP_AT_ALT = 0x4,
+	STOP_AT_ANY = 0x7
+};
 
 enum stack_token_type
 {
@@ -255,38 +262,41 @@ static int push_node(struct parse_state* state, ast_node* node, re_error* er)
 //this will handle a stack that looks like
 //(RE | RE |RE and turn it into a multinode of alternations or a single node on the stack
 //in either case the top of the stack will be a single RE 
-static int do_alternation(struct parse_state* state, re_error *er, int should_stop_at_lparen)
+static int do_alternation(struct parse_state* state, re_error *er, enum stop_criteria stop)
 {
 	stack_token* tok_ptr;
 	multi_node* alt = NULL;
-	ast_node* single_node = get_expected_re(state, er);
-	if(single_node == NULL)
-		return 0;
+	ast_node* single_node = NULL;
 
-	int expect_re = 0; //0 -> expect an ALT or end; 1 -> expect an RE
-	while(fat_stack_size(state->tokens) > 1)
+	int expect_re = 1; //0 -> expect an ALT or end; 1 -> expect an RE
+	while(fat_stack_size(state->tokens) > 0)
 	{
-		fat_stack_pop(state->tokens);
 		if(expect_re)
 		{
 			ast_node* node = get_expected_re(state, er);
 			if(node == NULL)
 				goto error;
-
-			if(alt == NULL)
+			if(single_node == NULL && alt == NULL)
 			{
-				alt = make_multi_and_push(ALT, 1, single_node);
+				single_node = node;
+			}
+			else
+			{
 				if(alt == NULL)
+				{
+					alt = make_multi_and_push(ALT, 1, single_node);
+					if(alt == NULL)
+					{
+						parse_error(E_OUT_OF_MEMORY, -1);
+						goto error;
+					}
+					single_node = NULL;
+				}
+				if(!multi_node_add(alt, node))
 				{
 					parse_error(E_OUT_OF_MEMORY, -1);
 					goto error;
-				}
-				single_node = NULL;
-			}
-			if(!multi_node_add(alt, node))
-			{
-				parse_error(E_OUT_OF_MEMORY, -1);
-				goto error;
+				}				
 			}
 			expect_re = 0;
 		}
@@ -300,7 +310,7 @@ static int do_alternation(struct parse_state* state, re_error *er, int should_st
 				//this is what we expected
 				expect_re = 1;
 			}//we must be at the end or an error
-			else if(tok.type == LPAREN_TOK && should_stop_at_lparen)
+			else if((tok.type == LPAREN_TOK) && (stop & SHOULD_STOP_AT_LPAREN))
 			{
 				goto end;
 			}
@@ -310,10 +320,18 @@ static int do_alternation(struct parse_state* state, re_error *er, int should_st
 				goto error;
 			}
 		}
+		if(fat_stack_size(state->tokens) == 1)
+			break;
+		fat_stack_pop(state->tokens);
+	}
+	if(expect_re)
+	{
+		parse_error(E_MISSING_OP_ARGUMENT, -1);
+		goto error;
 	}
 //if we get here then we ran out of tokens
 //this is only ok if we were not supposed to stop at an lparen
-	if(should_stop_at_lparen)
+	if(!(stop & SHOULD_STOP_AT_END))
 	{
 		parse_error(E_UNMATCHED_PAREN, -1);
 		goto error;
@@ -331,6 +349,11 @@ end:
 	{
 		tok_ptr->v.node= (ast_node*) alt;
 	}
+	else
+	{
+		parse_error(E_EXPECTED_TOKEN, -1);
+		return 0;
+	}
 	
 	//we have the first re
 	return 1;
@@ -340,56 +363,66 @@ error:
 	return 0;
 }
 
-static int do_concat(struct parse_state* state, re_error *er)
+static int do_concat(struct parse_state* state, re_error *er, enum stop_criteria stop)
 {
 	ast_node* single_node = NULL;
 	multi_node* cat = NULL;
-	
 	stack_token* tok_ptr = NULL;
 	stack_token tok;
-	
-	single_node = get_expected_re(state, er);
-	if(single_node == NULL)
-		return 0;
-	
-	while(fat_stack_size(state->tokens) > 1)
+
+	while(fat_stack_size(state->tokens) > 0)
 	{
-		fat_stack_pop(state->tokens);//pop the previous item
 		tok_ptr = (stack_token*) fat_stack_peek(state->tokens);
 		tok = *tok_ptr;
 		if(tok.type == NODE)
 		{
 			ast_node* node = tok.v.node;
-			if(cat == NULL)
+			if(single_node == NULL && cat == NULL)
 			{
-				cat = make_multi_and_push(CONCAT, 1, single_node);
+				single_node = tok.v.node;
+			}
+			else
+			{
 				if(cat == NULL)
+				{
+					cat = make_multi_and_push(CONCAT, 1, single_node);
+					if(cat == NULL)
+					{
+						parse_error(E_OUT_OF_MEMORY, -1);
+						return 0;
+					}
+				}
+				if(!multi_node_add(cat, node))
 				{
 					parse_error(E_OUT_OF_MEMORY, -1);
 					return 0;
 				}
 			}
-			if(!multi_node_add(cat, node))
-			{
-				parse_error(E_OUT_OF_MEMORY, -1);
-				return 0;
-			}
 		}
 		else
 		{
 			token_type tt = tok.v.tok.type;
-			if(tt == LPAREN_TOK || tt == ALT_TOK)
+			if((tt == LPAREN_TOK && (stop & SHOULD_STOP_AT_LPAREN))
+				|| (tt == ALT_TOK && (stop & SHOULD_STOP_AT_LPAREN)))
 			{
 				goto end;
 			}
 			else
 			{
 				parse_error(E_UNEXPECTED_TOKEN, tok.v.tok.position);
-				if(cat != NULL) free_node((ast_node*) cat);
-				if(single_node != NULL) free_node(single_node);
-				return 0;
+				goto error;
 			}
 		}
+		if(fat_stack_size(state->tokens) == 1)
+			break;
+		
+		fat_stack_pop(state->tokens);//pop the previous item
+	}
+
+	if(!(stop & SHOULD_STOP_AT_END))
+	{
+		parse_error(E_UNMATCHED_PAREN, -1);
+		goto error;
 	}
 end:
 //the previous item is still on the stack so instead of popping and pushing a new one
@@ -407,12 +440,32 @@ end:
 	}
 	else
 	{
-		//this was an empty concatentation
-		parse_error(E_EXPECTED_TOKEN, tok.v.tok.position);
-		return 0;
+		if(tok_ptr == NULL)
+		{//the whole stack was empty
+			if(!fat_stack_push(state->tokens, &tok))
+			{
+				parse_error(E_OUT_OF_MEMORY, -1);
+				return 0;
+			}
+			tok_ptr = (stack_token*) fat_stack_peek(state->tokens);
+		}
+		ast_node* empty = make_node(EMPTY);
+		if(empty == NULL)
+		{
+			parse_error(E_OUT_OF_MEMORY, -1);
+			return 0;
+		}
+
+		tok_ptr->type = NODE;
+		tok_ptr->v.node = empty;
 	}
 	
 	return 1;
+
+error:
+	if(cat != NULL) free_node((ast_node*) cat);
+	if(single_node != NULL) free_node(single_node);
+	return 0;
 }
 static int push_token(struct parse_state *state, token tok, re_error* er)
 {
@@ -429,9 +482,9 @@ static int push_token(struct parse_state *state, token tok, re_error* er)
 
 static int handle_end(struct parse_state *state, ast_node** rval, re_error* er)
 {
-	if(!do_concat(state, er))
+	if(!do_concat(state, er, SHOULD_STOP_AT_END | SHOULD_STOP_AT_ALT))
 		return 0;
-	if(!do_alternation(state, er, 0))
+	if(!do_alternation(state, er, SHOULD_STOP_AT_END))
 		return 0;
 	unsigned int sz = fat_stack_size(state->tokens);
 	if(sz != 1)
@@ -446,6 +499,7 @@ static int handle_end(struct parse_state *state, ast_node** rval, re_error* er)
 		parse_error(E_UNEXPECTED_TOKEN, -1);
 		return 0;
 	}
+	fat_stack_pop(state->tokens);
 	return 1;
 }
 
@@ -498,14 +552,14 @@ static int token_dispatch(struct parse_state* state, token* tok, ast_node** rval
 			v = handle_counted_rep(state, er);
 			break;
 		case ALT_TOK:
-			v = do_concat(state, er);
+			v = do_concat(state, er, STOP_AT_ANY);
 			if(v)
 				v = push_token(state, *tok, er);
 			break;
 		case RPAREN_TOK:
-			v = do_concat(state, er);
+			v = do_concat(state, er, SHOULD_STOP_AT_ALT | SHOULD_STOP_AT_LPAREN);
 			if(v)
-				v = do_alternation(state, er, 1);
+				v = do_alternation(state, er, SHOULD_STOP_AT_LPAREN);
 			break;
 		case INVALID_TOK:
 			parse_error(E_INVALID_TOKEN, tok->position);
@@ -533,7 +587,7 @@ static void destroy_stack(fat_stack* stack)
 	fat_stack_destroy(stack);
 }
 
-ast_node* re_parse_new(char* regex, re_error* er)
+ast_node* re_parse(char* regex, re_error* er)
 {
 	//default to success
 	parse_error(E_SUCCESS, -1);
@@ -912,7 +966,7 @@ static inline fat_stack* read_all_tokens(lexer* lxr, re_error* er)
 	return stk;
 }
 
-ast_node* re_parse(char *regex, re_error* er)
+ast_node* re_parse_old(char *regex, re_error* er)
 {
 	//default to success
 	parse_error(E_SUCCESS, -1);
