@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "fat_stack.h"
-#include "util.h"
 
 fat_stack* fat_stack_create(size_t obj_size)
 {
@@ -17,7 +16,8 @@ char fat_stack_is_empty(fat_stack* stk)
 {
 	return stk->entries == 0;
 }
-int fat_stack_size(fat_stack* stk)
+
+unsigned int fat_stack_size(fat_stack* stk)
 {
 	return stk->entries;
 }

@@ -32,7 +32,6 @@ void dassert(int check, const char* msg)
 		exit(1);
 	}
 #else
-
 #endif
 }
 

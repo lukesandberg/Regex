@@ -2,6 +2,8 @@
 #include "re_lexer.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
+
 #include <util/fat_stack.h>
 #include <util/util.h>
 /*
@@ -51,28 +53,128 @@ struct parse_state
 {
 	lexer lxr;
 	fat_stack* tokens;
-	unsigned int nlparens;
-	unsigned int nalts;
 };
 
-struct stack_token
+enum stack_token_type
 {
-	enum
-	{
-		NODE,
-		TOKEN,
-	} type;
+	NODE,
+	TOKEN
+};
+typedef struct
+{
+	enum stack_token_type type;
 	union
 	{
 		ast_node* node;
 		token tok;
 	} v;
-};
+} stack_token;
 
-static int handle_unary_op(struct parse_state* state, node_type type, re_error er)
+
+static ast_node* get_expected_re(struct parse_state* state, re_error* er)
 {
-	stack_token tok = fat_stack_peek(state->tokens);
+	ast_node* single_node = NULL;
+	if(fat_stack_size(state->tokens) == 0)
+	{
+		parse_error(E_EXPECTED_TOKEN, -1);
+		return NULL;
+	}
+	
+	stack_token* tok_ptr = (stack_token*)fat_stack_peek(state->tokens);
+	stack_token tok = *tok_ptr;
+	
+	if(tok.type == NODE)
+		single_node = tok.v.node;
+	else
+		parse_error(E_EXPECTED_TOKEN, tok.v.tok.position);
+	return single_node;
+}
+
+static token get_expected_tok(struct parse_state* state, re_error* er)
+{
+	token invalid_tok = {.type=INVALID_TOK, .position=-1};
+	if(fat_stack_size(state->tokens) == 0)
+	{
+		parse_error(E_EXPECTED_TOKEN, -1);
+		return invalid_tok;
+	}
+	stack_token* tok_ptr = (stack_token*)fat_stack_peek(state->tokens);
+	stack_token tok = *tok_ptr;
+	
+	if(tok.type == TOKEN)
+		return tok.v.tok;
+	else
+	{
+		parse_error(E_INVALID_TOKEN, -1);
+		return invalid_tok;
+	}
+}
+
+static int get_expected_num(struct parse_state* state, unsigned int *num, re_error* er)
+{
+	token tok = get_expected_tok(state, er);
+	if(tok.type == INVALID_TOK)
+		return 0;
+	if(tok.type != NUM_TOK)
+	{
+		parse_error(E_EXPECTED_TOKEN, tok.position);
+		return 0;
+	}
+	*num = tok.v.num_value;
+	return 1;
+}
+
+static int handle_counted_rep(struct parse_state* state, re_error* er)
+{
+	unsigned int max;
+	unsigned int min;
+	if(!get_expected_num(state, &max, er))
+		return 0;
 	fat_stack_pop(state->tokens);
+	min = max;//default to the same
+	token tok = get_expected_tok(state, er);
+	fat_stack_pop(state->tokens);
+	if(tok.type == INVALID_TOK)
+		return 0;
+	if(tok.type != COMMA_TOK && tok.type != LCR_TOK)
+	{
+		parse_error(E_UNEXPECTED_TOKEN, tok.position);
+		return 0;
+	}
+	if(tok.type == COMMA_TOK)
+	{
+		if(!get_expected_num(state, &min, er))
+			return 0;
+		fat_stack_pop(state->tokens);
+		tok = get_expected_tok(state, er);
+		if(tok.type == INVALID_TOK)
+			return 0;
+		if(tok.type != LCR_TOK)
+		{
+			parse_error(E_UNEXPECTED_TOKEN, tok.position);
+			return 0;
+		}
+		fat_stack_pop(state->tokens);
+	}
+	//we have the min and the max and its all off the stack
+	ast_node* node = get_expected_re(state, er);
+	if(node == NULL)
+		return 0;
+	loop_node* ln = make_loop(node, min, max);
+	if(ln == NULL)
+	{
+		parse_error(E_OUT_OF_MEMORY, -1);
+		return 0;
+	}
+	//put our new node on top of the stack
+	((stack_token*) fat_stack_peek(state->tokens))->v.node = (ast_node*) ln;
+	return 1;
+}
+
+static int handle_unary_op(struct parse_state* state, node_type type, re_error* er)
+{
+	stack_token* tok_ptr = (stack_token*) fat_stack_peek(state->tokens);
+	stack_token tok = *tok_ptr;
 	if(tok.type == NODE)
 	{
 		ast_node* node = tok.v.node;
@@ -82,8 +184,7 @@ static int handle_unary_op(struct parse_state* state, node_type type, re_error e
 			parse_error(E_OUT_OF_MEMORY, -1);
 			return 0;
 		}
-		tok.v.node = un;
-		fat_stack_push(state->tokens, tok);
+		tok_ptr->v.node = (ast_node*) un;
 		return 1;
 	}
 	else
@@ -91,6 +192,345 @@ static int handle_unary_op(struct parse_state* state, node_type type, re_error e
 		parse_error(E_MISSING_OP_ARGUMENT, tok.v.tok.position);
 		return 0;
 	}
+}
+
+static int multi_node_add(multi_node* m, ast_node* n)
+{
+	if(!linked_list_add_last(m->list, n))
+	{
+		free_node((ast_node*)m);
+		free_node(n);
+		return 0;
+	}
+	return 1;
+}
+
+static multi_node* make_multi_and_push(node_type multi_type, unsigned int count, ...)
+{
+	multi_node* m = make_multi(multi_type);
+	if(m == NULL)
+		return NULL;
+	
+	va_list args;
+	va_start(args, count);
+	ast_node* node;
+	int error = 0;
+	for(unsigned int i = 0; i < count; i++)
+	{
+		node = va_arg(args, ast_node*);
+		if(error)
+		{
+			free_node(node);
+		}
+		else if(!multi_node_add(m, node))
+		{
+			m = NULL;
+			error = 1;
+		}
+	}
+	va_end(args);
+	return m;
+}
+
+static int push_node(struct parse_state* state, ast_node* node, re_error* er)
+{
+	if(node == NULL)
+	{
+		parse_error(E_OUT_OF_MEMORY, -1);
+		return 0;
+	}
+
+	stack_token tok;
+	tok.type = NODE;
+	tok.v.node = node;
+
+	if(!fat_stack_push(state->tokens, &tok))
+	{
+		parse_error(E_OUT_OF_MEMORY, -1);
+		return 0;
+	}
+	return 1;
+}
+
+//this will handle a stack that looks like
+//(RE | RE |RE and turn it into a multinode of alternations or a single node on the stack
+//in either case the top of the stack will be a single RE 
+static int do_alternation(struct parse_state* state, re_error *er, int should_stop_at_lparen)
+{
+	stack_token* tok_ptr;
+	multi_node* alt = NULL;
+	ast_node* single_node = get_expected_re(state, er);
+	if(single_node == NULL)
+		return 0;
+
+	int expect_re = 0; //0 -> expect an ALT or end; 1 -> expect an RE
+	while(fat_stack_size(state->tokens) > 1)
+	{
+		fat_stack_pop(state->tokens);
+		if(expect_re)
+		{
+			ast_node* node = get_expected_re(state, er);
+			if(node == NULL)
+				goto error;
+
+			if(alt == NULL)
+			{
+				alt = make_multi_and_push(ALT, 1, single_node);
+				if(alt == NULL)
+				{
+					parse_error(E_OUT_OF_MEMORY, -1);
+					goto error;
+				}
+				single_node = NULL;
+			}
+			if(!multi_node_add(alt, node))
+			{
+				parse_error(E_OUT_OF_MEMORY, -1);
+				goto error;
+			}
+			expect_re = 0;
+		}
+		else
+		{
+			token tok = get_expected_tok(state, er);
+			if(tok.type == INVALID_TOK)
+				goto error;
+			if(tok.type == ALT_TOK)
+			{
+				//this is what we expected
+				expect_re = 1;
+			}//we must be at the end or an error
+			else if(tok.type == LPAREN_TOK && should_stop_at_lparen)
+			{
+				goto end;
+			}
+			else
+			{
+				parse_error(E_INVALID_TOKEN, tok.position);
+				goto error;
+			}
+		}
+	}
+//if we get here then we ran out of tokens
+//this is only ok if we were not supposed to stop at an lparen
+	if(should_stop_at_lparen)
+	{
+		parse_error(E_UNMATCHED_PAREN, -1);
+		goto error;
+	}
+	
+end:
+	tok_ptr = (stack_token*) fat_stack_peek(state->tokens);
+	tok_ptr->type = NODE;
+	//put the alternation or single re on top of the stack
+	if(single_node != NULL)
+	{
+		tok_ptr->v.node= single_node;
+	}
+	else if(alt != NULL)
+	{
+		tok_ptr->v.node= (ast_node*) alt;
+	}
+	
+	//we have the first re
+	return 1;
+error:
+	if(alt != NULL) free_node((ast_node*) alt);
+	if(single_node != NULL) free_node(single_node);
+	return 0;
+}
+
+static int do_concat(struct parse_state* state, re_error *er)
+{
+	ast_node* single_node = NULL;
+	multi_node* cat = NULL;
+	
+	stack_token* tok_ptr = NULL;
+	stack_token tok;
+	
+	single_node = get_expected_re(state, er);
+	if(single_node == NULL)
+		return 0;
+	
+	while(fat_stack_size(state->tokens) > 1)
+	{
+		fat_stack_pop(state->tokens);//pop the previous item
+		tok_ptr = (stack_token*) fat_stack_peek(state->tokens);
+		tok = *tok_ptr;
+		if(tok.type == NODE)
+		{
+			ast_node* node = tok.v.node;
+			if(cat == NULL)
+			{
+				cat = make_multi_and_push(CONCAT, 1, single_node);
+				if(cat == NULL)
+				{
+					parse_error(E_OUT_OF_MEMORY, -1);
+					return 0;
+				}
+			}
+			if(!multi_node_add(cat, node))
+			{
+				parse_error(E_OUT_OF_MEMORY, -1);
+				return 0;
+			}
+		}
+		else
+		{
+			token_type tt = tok.v.tok.type;
+			if(tt == LPAREN_TOK || tt == ALT_TOK)
+			{
+				goto end;
+			}
+			else
+			{
+				parse_error(E_UNEXPECTED_TOKEN, tok.v.tok.position);
+				if(cat != NULL) free_node((ast_node*) cat);
+				if(single_node != NULL) free_node(single_node);
+				return 0;
+			}
+		}
+	}
+end:
+//the previous item is still on the stack so instead of popping and pushing a new one
+//we will just edit the top, this will remove a free/malloc pair which elimiates one more
+//error location
+	if(cat != NULL)
+	{
+		tok_ptr->type = NODE;
+		tok_ptr->v.node =  (ast_node*) cat;
+	}
+	else if(single_node != NULL)
+	{
+		tok_ptr->type = NODE;
+		tok_ptr->v.node =  single_node;
+	}
+	else
+	{
+		//this was an empty concatentation
+		parse_error(E_EXPECTED_TOKEN, tok.v.tok.position);
+		return 0;
+	}
+	
+	return 1;
+}
+static int push_token(struct parse_state *state, token tok, re_error* er)
+{
+	stack_token st;
+	st.type = TOKEN;
+	st.v.tok = tok;
+	if(!fat_stack_push(state->tokens, &st))
+	{
+		parse_error(E_OUT_OF_MEMORY, -1);
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_end(struct parse_state *state, ast_node** rval, re_error* er)
+{
+	if(!do_concat(state, er))
+		return 0;
+	if(!do_alternation(state, er, 0))
+		return 0;
+	unsigned int sz = fat_stack_size(state->tokens);
+	if(sz != 1)
+	{
+		if(sz > 1) parse_error(E_UNEXPECTED_TOKEN, -1);
+		else parse_error(E_EXPECTED_TOKEN, -1);
+		return 0;
+	}
+	*rval = get_expected_re(state, er);
+	if(*rval == NULL)
+	{
+		parse_error(E_UNEXPECTED_TOKEN, -1);
+		return 0;
+	}
+	return 1;
+}
+
+//0 implies an error, 1 implies continue, 2 implies that we are done
+static int token_dispatch(struct parse_state* state, token* tok, ast_node** rval, re_error* er)
+{
+	int v;
+	switch(tok->type)
+	{
+		case CHAR_TOK:
+			v = push_node(state, (ast_node*) make_char(tok->v.char_value), er);
+			break;
+		case PLUS_TOK:
+			v = handle_unary_op(state, PLUS, er);
+			break;
+		case QMARK_TOK:
+			v = handle_unary_op(state, QMARK, er);
+			break;
+		case STAR_TOK:
+			v = handle_unary_op(state, STAR, er);
+			break;
+		case NG_STAR_TOK:
+			v = handle_unary_op(state, NG_STAR, er);
+			break;
+		case NG_PLUS_TOK:
+			v = handle_unary_op(state, NG_PLUS, er);
+			break;
+		case NG_QMARK_TOK:
+			v = handle_unary_op(state, NG_QMARK, er);
+			break;
+		case WILDCARD_TOK:
+			v = push_node(state, (ast_node*) make_node(WILDCARD), er);
+			break;
+		case DIGIT_TOK:
+			v = push_node(state, make_node(DIGIT), er);
+			break;
+		case WHITESPACE_TOK:
+			v = push_node(state, make_node(WHITESPACE), er);
+			break;
+		case ALPHA_TOK:
+			v = push_node(state, make_node(ALPHA), er);
+			break;
+		case LCR_TOK:
+		case LPAREN_TOK:
+		case COMMA_TOK:
+		case NUM_TOK:
+			v = push_token(state, *tok, er);
+			break;
+		case RCR_TOK:
+			v = handle_counted_rep(state, er);
+			break;
+		case ALT_TOK:
+			v = do_concat(state, er);
+			if(v)
+				v = push_token(state, *tok, er);
+			break;
+		case RPAREN_TOK:
+			v = do_concat(state, er);
+			if(v)
+				v = do_alternation(state, er, 1);
+			break;
+		case INVALID_TOK:
+			parse_error(E_INVALID_TOKEN, tok->position);
+			v = 0;
+			break;
+		case END_TOK:
+			v = handle_end(state, rval, er);
+			if(v) v =2;//
+			break;
+	}
+	return v;
+}
+
+static void destroy_stack(fat_stack* stack)
+{
+	while(fat_stack_size(stack) >0)
+	{
+		stack_token* t = (stack_token*) fat_stack_peek(stack);
+		if(t->type == NODE)
+		{
+			free_node(t->v.node);
+		}
+		fat_stack_pop(stack);
+	}
+	fat_stack_destroy(stack);
 }
 
 ast_node* re_parse_new(char* regex, re_error* er)
@@ -101,69 +541,22 @@ ast_node* re_parse_new(char* regex, re_error* er)
 	struct parse_state state;
 	init_lexer(&state.lxr, regex);
 	state.tokens = fat_stack_create(sizeof(stack_token));
-	state.nlparens = 0;
-	state.nalts = 0;
 	if(state.tokens == NULL)
 	{
 		parse_error(E_OUT_OF_MEMORY, -1);
 		return NULL;
 	}
 	token tok;
-	
-	while((tok = read_token(&state.lxr)).type != END_TOK)
+	int continu = 1;//continue is a keyword :(
+	while(continu)
 	{
-		switch(tok.type)
-		{
-			case CHAR_TOK:
-				//handle_char(&state, tok.v.char_value);
-				break;
-			case PLUS_TOK:
-				if(!handle_unary_op(&state, PLUS_TOK)
-				break;
-			case QMARK_TOK:
-			break;
-			case ALT_TOK:
-			break;
-			case STAR_TOK:
-			break;
-			case WILDCARD_TOK:
-			break;
-			case DIGIT_TOK:
-			break;
-			case WHITESPACE_TOK:
-			break;
-			case ALPHA_TOK:
-			break;
-			case LPAREN_TOK:
-			break;
-			case RPAREN_TOK:
-			break;
-			case NG_STAR_TOK:
-			break;
-			case NG_PLUS_TOK:
-			break;
-			case NG_QMARK_TOK:
-			break;
-			case LCR_TOK:
-			break;
-			case RCR_TOK:
-			break;
-			case COMMA_TOK:
-			break;
-			case NUM_TOK:
-			break;
-			case END_TOK:
-				dassert(0, "impossible case");
-				break;
-			case INVALID_TOK:
-				parse_error(E_INVALID_TOKEN, tok.position);
-				goto end;
-		}
+		tok = read_token(&state.lxr);
+		continu = token_dispatch(&state, &tok, &tree, er);
+		if(continu == 2)//we are done
+			break;	
 	}
 
-end:
-	fat_stack_destroy(state.tokens);
-
+	destroy_stack(state.tokens);
 	return tree;
 }
 
