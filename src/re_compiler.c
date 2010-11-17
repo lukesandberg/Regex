@@ -13,9 +13,9 @@ struct compile_state
 	size_t max_loop_vars;
 	size_t next_loop_var;
 };
-
+static size_t program_size(ast_node* n);
 static inline void compile_concat(struct compile_state *state, multi_node* n);
-static inline void compile_alt(struct compile_state *state, binary_node* n);
+static inline void compile_alt(struct compile_state *state, multi_node* n);
 static inline void compile_plus(struct compile_state *state, unary_node* n, int ng);
 static inline void compile_qmark(struct compile_state *state, unary_node* n, int ng);
 static inline void compile_capture(struct compile_state *state, unary_node* n);
@@ -49,7 +49,7 @@ static void compile_recursive(struct compile_state *state, ast_node* n)
 			compile_concat(state,  (multi_node*) n);
 			break;
 		case ALT:
-			compile_alt(state, (binary_node*) n);
+			compile_alt(state, (multi_node*) n);
 			break;
 		case WILDCARD:
 			compile_op(state, I_WILDCARD);
@@ -207,21 +207,69 @@ L1: codes for e1
 L2: codes for e2
 L3:
    */
-static void compile_alt(struct compile_state *state, binary_node* n)
-{
-	instruction* split = state->inst;
-	split->op = I_SPLIT;
-	state->inst++;
-	split->v.split.left = state->inst - state->first;//L1
-	compile_recursive(state, n->left);//codes for e1
-	
-	instruction* jmp = state->inst;//jmp L3
-	jmp->op = I_JMP;
-	state->inst++;
-	split->v.split.right = state->inst - state->first;//L2
+/*
+ * e1|e2|e3
+ *
+ * 	split L1 LD1
+ * LD1:	split L2 L3
+ * L1:	codes for e1
+ * 	jmp end
+ * L2: 	codes for e2
+ * 	jmp end
+ * L3:	codes for e3
+ * end:
+ */
+static void compile_alt(struct compile_state *state, multi_node* n)
+{//we know that there are at least two items on this list
 
-	compile_recursive(state, n->right);//codes for e2
-	jmp->v.jump = state->inst - state->first;//L3
+	unsigned int end = program_size((ast_node*)n) + state->inst - state->first;
+	
+	linked_list_node* last = linked_list_last(n->list);
+	linked_list_node* first = linked_list_first(n->list);
+	linked_list_node* current = first;
+	linked_list_node* next = linked_list_next(current);
+	instruction* first_split = state->inst;
+	while(next != last)
+	{
+		instruction* split = state->inst;
+		split->op = I_SPLIT;
+		state->inst++;
+		split->v.split.right = state->inst - state->first;
+		current = next;
+		next = linked_list_next(next);
+	}
+	instruction* last_split = state->inst;
+	last_split->op = I_SPLIT;
+	state->inst++;
+	
+	current = first;
+	next = linked_list_next(current);
+	instruction* cur_split = first_split;
+	while(current != NULL)
+	{
+		unsigned int li = state->inst - state->first;
+		if(current == last)
+		{
+			cur_split->v.split.right = li;
+		}
+		else
+		{
+			cur_split->v.split.left = li;
+		}
+		compile_recursive(state, (ast_node*) linked_list_value(first));
+		
+		if(current != last)
+		{
+			//the last one doesnt get a jmp
+			state->inst->op = I_JMP;
+			state->inst->v.jump = end;
+			state->inst++;
+		}
+		current = next;
+		next = linked_list_next(next);
+		if(next != last)
+			cur_split++;
+	}
 }
 
 /*

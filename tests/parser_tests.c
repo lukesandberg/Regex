@@ -110,6 +110,21 @@ static char* TestInvalid()
 	return NULL;
 }
 
+static char* TestAlteration()
+{
+	re_error er;
+	ast_node* tree;
+	tree = re_parse("a|b", &er);
+	mu_assert("should be a valid parse", er.errno == E_SUCCESS);
+	mu_assert("should be a alternation node", tree->type == ALT);
+	linked_list_node* node = linked_list_first(((multi_node*) tree)->list);
+	mu_assert("should be a CHAR", ((ast_node*)linked_list_value(node))->type == CHAR);
+	node = linked_list_next(node);
+	mu_assert("should be a CHAR", ((ast_node*)linked_list_value(node))->type == CHAR);
+	free_node(tree);
+	return NULL;
+}
+
 static char* TestNullError()
 {
 	ast_node* tree = re_parse("a*", NULL);
@@ -211,6 +226,7 @@ void test_parser()
 	mu_run_test(TestConcatStarPrecedence);
 	mu_run_test(TestInvalid);
 	mu_run_test(TestNullError);
+	mu_run_test(TestAlteration);
 	mu_run_test(TestCountedRepetition);
 	mu_run_test(TestCountedRepetitionGroup);
 	mu_run_test(TestCountedRepetitionSequence);

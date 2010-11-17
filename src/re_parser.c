@@ -99,7 +99,8 @@ static ast_node* get_expected_re(struct parse_state* state, re_error* er)
 
 static token get_expected_tok(struct parse_state* state, re_error* er)
 {
-	token invalid_tok = {.type=INVALID_TOK, .position=-1};
+	token invalid_tok;
+	invalid_tok.type=INVALID_TOK;
 	if(fat_stack_size(state->tokens) == 0)
 	{
 		parse_error(E_EXPECTED_TOKEN, -1);
@@ -180,6 +181,11 @@ static int handle_counted_rep(struct parse_state* state, re_error* er)
 
 static int handle_unary_op(struct parse_state* state, node_type type, re_error* er)
 {
+	if(fat_stack_size(state->tokens) == 0)
+	{
+		parse_error(E_MISSING_OP_ARGUMENT, -1);
+		return 0;
+	}
 	stack_token* tok_ptr = (stack_token*) fat_stack_peek(state->tokens);
 	stack_token tok = *tok_ptr;
 	if(tok.type == NODE)
@@ -203,7 +209,7 @@ static int handle_unary_op(struct parse_state* state, node_type type, re_error* 
 
 static int multi_node_add(multi_node* m, ast_node* n)
 {
-	if(!linked_list_add_last(m->list, n))
+	if(!linked_list_add_first(m->list, n))
 	{
 		free_node((ast_node*)m);
 		free_node(n);
@@ -403,7 +409,7 @@ static int do_concat(struct parse_state* state, re_error *er, enum stop_criteria
 		{
 			token_type tt = tok.v.tok.type;
 			if((tt == LPAREN_TOK && (stop & SHOULD_STOP_AT_LPAREN))
-				|| (tt == ALT_TOK && (stop & SHOULD_STOP_AT_LPAREN)))
+				|| (tt == ALT_TOK && (stop & SHOULD_STOP_AT_ALT)))
 			{
 				goto end;
 			}
@@ -413,9 +419,6 @@ static int do_concat(struct parse_state* state, re_error *er, enum stop_criteria
 				goto error;
 			}
 		}
-		if(fat_stack_size(state->tokens) == 1)
-			break;
-		
 		fat_stack_pop(state->tokens);//pop the previous item
 	}
 
@@ -428,35 +431,31 @@ end:
 //the previous item is still on the stack so instead of popping and pushing a new one
 //we will just edit the top, this will remove a free/malloc pair which elimiates one more
 //error location
+
+	tok.type = NODE;
+	if(!fat_stack_push(state->tokens, &tok))
+	{
+		parse_error(E_OUT_OF_MEMORY, -1);
+		return 0;
+	}
+	tok_ptr = (stack_token*) fat_stack_peek(state->tokens);
+	
 	if(cat != NULL)
 	{
-		tok_ptr->type = NODE;
 		tok_ptr->v.node =  (ast_node*) cat;
 	}
 	else if(single_node != NULL)
 	{
-		tok_ptr->type = NODE;
 		tok_ptr->v.node =  single_node;
 	}
 	else
 	{
-		if(tok_ptr == NULL)
-		{//the whole stack was empty
-			if(!fat_stack_push(state->tokens, &tok))
-			{
-				parse_error(E_OUT_OF_MEMORY, -1);
-				return 0;
-			}
-			tok_ptr = (stack_token*) fat_stack_peek(state->tokens);
-		}
 		ast_node* empty = make_node(EMPTY);
 		if(empty == NULL)
 		{
 			parse_error(E_OUT_OF_MEMORY, -1);
 			return 0;
 		}
-
-		tok_ptr->type = NODE;
 		tok_ptr->v.node = empty;
 	}
 	
