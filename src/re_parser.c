@@ -559,6 +559,8 @@ static int token_dispatch(struct parse_state* state, token* tok, ast_node** rval
 			v = do_concat(state, er, SHOULD_STOP_AT_ALT | SHOULD_STOP_AT_LPAREN);
 			if(v)
 				v = do_alternation(state, er, SHOULD_STOP_AT_LPAREN);
+			if(v)
+				v = handle_unary_op(state, CAPTURE, er);
 			break;
 		case INVALID_TOK:
 			parse_error(E_INVALID_TOKEN, tok->position);

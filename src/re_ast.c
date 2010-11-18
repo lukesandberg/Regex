@@ -78,6 +78,7 @@ void free_node(ast_node* n)
 			if(sn->expr != NULL) free_node(sn->expr);
 			break;
 		case CONCAT:
+		case ALT:
 			;
 			multi_node* mn = (multi_node*) n;
 			while(!linked_list_is_empty(mn->list))
@@ -85,12 +86,6 @@ void free_node(ast_node* n)
 				free_node((ast_node*) linked_list_remove_first(mn->list));
 			}
 			linked_list_destroy(mn->list);
-			break;
-		case ALT:
-			;//to avoid the gcc declarations after labels issue
-			binary_node* cn = (binary_node*) n;
-			if(cn->left != NULL) free_node(cn->left);
-			if(cn->right != NULL) free_node(cn->right);
 			break;
 		case CHAR:
 		case WHITESPACE:

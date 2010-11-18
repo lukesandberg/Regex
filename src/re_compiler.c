@@ -243,7 +243,6 @@ static void compile_alt(struct compile_state *state, multi_node* n)
 	state->inst++;
 	
 	current = first;
-	next = linked_list_next(current);
 	instruction* cur_split = first_split;
 	while(current != NULL)
 	{
@@ -256,7 +255,7 @@ static void compile_alt(struct compile_state *state, multi_node* n)
 		{
 			cur_split->v.split.left = li;
 		}
-		compile_recursive(state, (ast_node*) linked_list_value(first));
+		compile_recursive(state, (ast_node*) linked_list_value(current));
 		
 		if(current != last)
 		{
@@ -265,9 +264,8 @@ static void compile_alt(struct compile_state *state, multi_node* n)
 			state->inst->v.jump = end;
 			state->inst++;
 		}
-		current = next;
-		next = linked_list_next(next);
-		if(next != last)
+		current = linked_list_next(current);
+		if(current != last)
 			cur_split++;
 	}
 }
@@ -349,20 +347,28 @@ static size_t program_size(ast_node* n)
 		case CAPTURE:
 			return 2 + program_size(((unary_node*)n)->expr);
 		case ALT:
-			//alts are a jmp and a split plus both subs
-			return 2 + program_size(((binary_node*) n)->left) + program_size(((binary_node*)n)->right);
+			;
+			//each alt part has a split and a jmp except the last
+			//so add up each part + 2 then subtract 2
+			size_t asz = -2;
+			linked_list_node* aln = linked_list_first(((multi_node*) n)->list);
+			while(aln  != NULL)
+			{
+				asz += program_size((ast_node*) linked_list_value(aln)) + 2;
+				aln = linked_list_next(aln);
+			}
+			return asz;
 		case CONCAT:
 			;
 			//cats are just the sum of all the sub_sequences
-			size_t sz = 0;
-			multi_node* mn = (multi_node*) n;
-			linked_list_node* ln = linked_list_first(mn->list);
-			while(ln != NULL)
+			size_t czs = 0;
+			linked_list_node* cln = linked_list_first(((multi_node*) n)->list);
+			while(cln != NULL)
 			{
-				sz += program_size((ast_node*) linked_list_value(ln));
-				ln = linked_list_next(ln);
+				czs += program_size((ast_node*) linked_list_value(cln));
+				cln = linked_list_next(cln);
 			}
-			return sz;
+			return czs;
 		case STAR:
 		case NG_STAR:
 			//stars are the sub exp plus a jmp and a split
