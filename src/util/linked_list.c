@@ -12,6 +12,7 @@ struct _ll_list
 {
 	linked_list_node* first;
 	linked_list_node* last;
+	unsigned int sz;
 };
 
 
@@ -22,6 +23,7 @@ linked_list* make_linked_list()
 	{
 		ll->first = NULL;
 		ll->last = NULL;
+		ll->sz = 0;
 	}
 	return ll;
 }
@@ -49,6 +51,7 @@ void* linked_list_remove_first(linked_list* ll)
 		ll->first->prev = NULL;
 	}
 	free(n);
+	ll->sz--;
 	return v;
 }
 void* linked_list_remove_last(linked_list* ll)
@@ -67,6 +70,7 @@ void* linked_list_remove_last(linked_list* ll)
 		ll->last->next = NULL;
 	}
 	free(n);
+	ll->sz--;
 	return v;
 }
 int linked_list_add_first(linked_list* ll, void* d)
@@ -80,6 +84,7 @@ int linked_list_add_first(linked_list* ll, void* d)
 	ll->first =n;
 	if(ll->last == NULL)
 		ll->last = n;
+	ll->sz++;
 	return 1;	
 }
 int linked_list_add_last(linked_list* ll, void* d)
@@ -93,13 +98,17 @@ int linked_list_add_last(linked_list* ll, void* d)
 	ll->last = n;
 	if(ll->first == NULL)
 		ll->first = n;
+	ll->sz++;
 	return 1;	
 }
 int linked_list_is_empty(linked_list* ll)
 {
 	return ll->first == NULL;
 }
-
+unsigned int linked_list_size(linked_list* ll)
+{
+	return ll->sz;
+}
 linked_list_node* linked_list_first(linked_list* ll)
 {
 	return ll->first;

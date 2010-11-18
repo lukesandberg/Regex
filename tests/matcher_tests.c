@@ -3,6 +3,8 @@
 #include <re.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <vm.h>
+#include <regex.h>
 
 int match(char* re_str, char* str)
 {

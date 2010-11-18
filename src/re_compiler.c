@@ -21,8 +21,15 @@ static inline void compile_qmark(struct compile_state *state, unary_node* n, int
 static inline void compile_capture(struct compile_state *state, unary_node* n);
 static inline void compile_star(struct compile_state *state, unary_node* n, int ng);
 static inline void compile_char(struct compile_state *state, char_node* n);
-static inline void compile_op(struct compile_state *state, op_code op);
 static inline void compile_crep(struct compile_state *state, loop_node* n);
+
+static inline void op(struct compile_state *state, op_code op);
+static inline void jmp(struct compile_state * state, unsigned int target);
+static inline void incr(struct compile_state * state, unsigned int reg);
+static inline void setz(struct compile_state * state, unsigned int reg);
+static inline void save(struct compile_state * state, unsigned int sr);
+static inline void comp(struct compile_state* state,  op_code op, unsigned int reg, unsigned int comp);
+static inline void split(struct compile_state* state, unsigned int left, unsigned int right, int ng);
 static void compile_recursive(struct compile_state *state, ast_node* n)
 {
 	switch(n->type)
@@ -52,16 +59,16 @@ static void compile_recursive(struct compile_state *state, ast_node* n)
 			compile_alt(state, (multi_node*) n);
 			break;
 		case WILDCARD:
-			compile_op(state, I_WILDCARD);
+			op(state, I_WILDCARD);
 			break;
 		case ALPHA:
-			compile_op(state, I_ALPHA);
+			op(state, I_ALPHA);
 			break;
 		case DIGIT:
-			compile_op(state, I_DIGIT);
+			op(state, I_DIGIT);
 			break;
 		case WHITESPACE:
-			compile_op(state, I_WHITESPACE);
+			op(state, I_WHITESPACE);
 			break;
 		case CAPTURE:
 			compile_capture(state, (unary_node*) n);
@@ -72,34 +79,65 @@ static void compile_recursive(struct compile_state *state, ast_node* n)
 	}
 }
 
-static inline void compile_capture(struct compile_state *state, unary_node* n)
-{
-	instruction* save_1 = state->inst;
-	save_1->op = I_SAVE;
-	save_1->v.save_register = state->next_save_reg;
-	state->next_save_reg += 2;
-	size_t nsr = state->next_save_reg -1;//we need to save it now in case ther are nested captures
-	state->inst++;
-	
-	compile_recursive(state, n->expr);
 
-	instruction* save_2 = state->inst;
-	save_2->op = I_SAVE;
-	save_2->v.save_register = nsr;
-	state->inst++;	
-}
-
-static inline void compile_op(struct compile_state *state, op_code op)
+static inline void op(struct compile_state *state, op_code op)
 {
 	state->inst->op = op;
 	state->inst++;
 }
-
-static inline void flip_split(instruction* split)
+static inline void save(struct compile_state * state, unsigned int sr)
 {
-	unsigned int tmp = split->v.split.left;
-	split->v.split.left = split->v.split.right;
-	split->v.split.right = tmp;
+	state->inst->op = I_SAVE;
+	state->inst->v.save_register = sr;
+	state->inst++;
+}
+static inline void jmp(struct compile_state * state, unsigned int target)
+{
+	state->inst->op = I_JMP;
+	state->inst->v.jump = target;
+	state->inst++;
+}
+
+static inline void incr(struct compile_state * state, unsigned int reg)
+{
+	state->inst->op = I_INCR;
+	state->inst->v.idx = reg;
+	state->inst++;
+}
+static inline void setz(struct compile_state * state, unsigned int reg)
+{
+	state->inst->op = I_SETZ;
+	state->inst->v.idx = reg;
+	state->inst++;
+}
+
+static inline void comp(struct compile_state* state,  op_code op, unsigned int reg, unsigned int comp)
+{
+	instruction* dgt = state->inst;
+	dgt->op = op;
+	dgt->v.comparison.idx = reg;
+	dgt->v.comparison.comp = comp;
+	state->inst++;
+}
+static inline void split(struct compile_state* state, unsigned int left, unsigned int right, int ng)
+{
+	instruction* s = state->inst;
+	s->op = I_SPLIT;
+	s->v.split.left = ng ? right : left;
+	s->v.split.right = ng ? left : right;
+	state->inst++;
+}
+
+static inline void compile_capture(struct compile_state *state, unary_node* n)
+{
+	save(state, state->next_save_reg);
+	
+	state->next_save_reg += 2;
+	size_t nsr = state->next_save_reg -1;//we need to save it now in case there are nested captures
+	
+	compile_recursive(state, n->expr);
+	
+	save(state, nsr);
 }
 
 /*
@@ -120,45 +158,22 @@ static inline void compile_crep(struct compile_state *state, loop_node* n)
 	{
 		state->max_loop_vars = state->next_loop_var;
 	}
-	instruction* setz = state->inst;
-	setz->op = I_SETZ;
-	setz->v.idx = reg;
-	state->inst++;
+	setz(state, reg);
 	
 	unsigned int L1 = state->inst - state->first;
-	instruction* split = state->inst;
-	split->op = I_SPLIT;
-	state->inst++;
-	
-	unsigned int L2 = state->inst - state->first;
-	split->v.split.left = L2;
+	unsigned int L2 = L1 + 1;
+	unsigned int L3 = L2 + n->base.expr->sub_prog_size + 3;//plus 2 for the incr and the jmp
+	split(state, L2, L3, 0);
 
-	instruction* dgt = state->inst;
-	dgt->op = I_DGTEQ;
-	dgt->v.comparison.idx = reg;
-	dgt->v.comparison.comp = n->max;
-	state->inst++;
+	comp(state, I_DGTEQ, reg, n->max);
 
 	compile_recursive(state, n->base.expr);
 
-	instruction *incr = state->inst;
-	incr->op = I_INCR;
-	incr->v.idx = reg;
-	state->inst++;
+	incr(state, reg);
 
-	instruction *jmp = state->inst;
-	jmp->op = I_JMP;
-	jmp->v.jump = L1;
-	state->inst++;
+	jmp(state, L1);
 
-	unsigned int L3 = state->inst - state->first;
-	split->v.split.right = L3;
-
-	instruction* dlt = state->inst;
-	dlt->op = I_DLT;
-	dlt->v.comparison.idx = reg;
-	dlt->v.comparison.comp = n->min;
-	state->inst++;
+	comp(state, I_DLT, reg, n->min);
 
 	state->next_loop_var--;
 }
@@ -170,33 +185,26 @@ L2:
  */
 static inline void compile_qmark(struct compile_state *state, unary_node* n, int ng)
 {
-	instruction* split = state->inst;
-	split->op = I_SPLIT;
-	state->inst++;
-	split->v.split.left = state->inst - state->first;//L1
+	unsigned int L1 = state->inst - state->first + 1;
+	unsigned int L2 = L1 + n->expr->sub_prog_size;
+	split(state, L1, L2, ng);
 	compile_recursive(state, n->expr);
-	split->v.split.right = state->inst - state->first;//L2
-	if(ng) flip_split(split);
 }
 
 /*
 e+:
 L1: codes for e
-    split L1, L3
-L3:
+    split L1, L2
+L2:
 */
 static inline void compile_plus(struct compile_state *state, unary_node* n, int ng)
 {
 	unsigned int L1 = state->inst - state->first;
 
 	compile_recursive(state, n->expr);
-	
-	instruction* split = state->inst;
-	split->op = I_SPLIT;
-	split->v.split.left = L1;
-	state->inst++;
-	split->v.split.right = state->inst - state->first;//L3
-	if(ng) flip_split(split);
+	unsigned int L2 = state->inst - state->first + 1;
+	split(state, L1, L2, ng);
+
 }
 
 /*
@@ -222,13 +230,14 @@ L3:
 static void compile_alt(struct compile_state *state, multi_node* n)
 {//we know that there are at least two items on this list
 
-	unsigned int end = program_size((ast_node*)n) + state->inst - state->first;
+	unsigned int end = n->base.sub_prog_size + state->inst - state->first;
 	
 	linked_list_node* last = linked_list_last(n->list);
 	linked_list_node* first = linked_list_first(n->list);
 	linked_list_node* current = first;
 	linked_list_node* next = linked_list_next(current);
 	instruction* first_split = state->inst;
+	
 	while(next != last)
 	{
 		instruction* split = state->inst;
@@ -238,6 +247,7 @@ static void compile_alt(struct compile_state *state, multi_node* n)
 		current = next;
 		next = linked_list_next(next);
 	}
+	
 	instruction* last_split = state->inst;
 	last_split->op = I_SPLIT;
 	state->inst++;
@@ -259,10 +269,8 @@ static void compile_alt(struct compile_state *state, multi_node* n)
 		
 		if(current != last)
 		{
-			//the last one doesnt get a jmp
-			state->inst->op = I_JMP;
-			state->inst->v.jump = end;
-			state->inst++;
+			//every one but the last gets a jmp
+			jmp(state, end);
 		}
 		current = linked_list_next(current);
 		if(current != last)
@@ -297,18 +305,13 @@ L3:
 */
 static inline void compile_star(struct compile_state* state, unary_node* n, int ng)
 {
-	instruction* split = state->inst; //split L2 L3
-	split->op = I_SPLIT;
-	state->inst++;
-	split->v.split.left = state->inst - state->first;//L2	
+	unsigned int L1 = state->inst - state->first;
+	unsigned int L2 = L1 + 1;
+	unsigned int L3 = L2 + n->expr->sub_prog_size + 1;
+
+	split(state, L2, L3, ng);
 	compile_recursive(state, n->expr);
-	
-	instruction* jmp = state->inst;//jmp L1
-	state->inst++;
-	split->v.split.right = state->inst - state->first;//L3
-	jmp->op = I_JMP;
-	jmp->v.jump = split - state->first;
-	if(ng) flip_split(split);
+	jmp(state, L1);
 }
 /*
 a:
@@ -331,59 +334,66 @@ static ast_node* optimize(ast_node* n)
 //our algorithm is deterministic, we can determine exactly how many 
 //instructions we will generate from the syntax tree
 static size_t program_size(ast_node* n)
-{	
+{
+	size_t sz = 0;
 	switch(n->type)
 	{
 		case CREP:
-			return 6 + program_size(((unary_node*)n)->expr);
+			sz = 6 + program_size(((unary_node*)n)->expr);
+			break;
 		case NG_PLUS:
 		case PLUS:
 			//plus's are the sub exp plus a split
-			return 1 + program_size(((unary_node*)n)->expr);
+			sz = 1 + program_size(((unary_node*)n)->expr);
+			break;
 		case QMARK:
 		case NG_QMARK:
 			//qmarks are the sub exp plus a jmp
-			return 1 + program_size(((unary_node*)n)->expr);
+			sz = 1 + program_size(((unary_node*)n)->expr);
+			break;
 		case CAPTURE:
-			return 2 + program_size(((unary_node*)n)->expr);
+			sz = 2 + program_size(((unary_node*)n)->expr);
+			break;
 		case ALT:
 			;
 			//each alt part has a split and a jmp except the last
 			//so add up each part + 2 then subtract 2
-			size_t asz = -2;
+			sz = -2;
 			linked_list_node* aln = linked_list_first(((multi_node*) n)->list);
 			while(aln  != NULL)
 			{
-				asz += program_size((ast_node*) linked_list_value(aln)) + 2;
+				sz += program_size((ast_node*) linked_list_value(aln)) + 2;
 				aln = linked_list_next(aln);
 			}
-			return asz;
+			break;
 		case CONCAT:
 			;
 			//cats are just the sum of all the sub_sequences
-			size_t czs = 0;
 			linked_list_node* cln = linked_list_first(((multi_node*) n)->list);
 			while(cln != NULL)
 			{
-				czs += program_size((ast_node*) linked_list_value(cln));
+				sz += program_size((ast_node*) linked_list_value(cln));
 				cln = linked_list_next(cln);
 			}
-			return czs;
+			break;
 		case STAR:
 		case NG_STAR:
 			//stars are the sub exp plus a jmp and a split
-			return 2 + program_size(((unary_node*)n)->expr);
+			sz = 2 + program_size(((unary_node*)n)->expr);
+			break;
 		case CHAR:
 		case WILDCARD:
 		case ALPHA:
 		case DIGIT:
 		case WHITESPACE:
-			return 1;
+			sz = 1;
+			break;
 		case EMPTY:
-			return 0;
+			sz = 0;
+			break;
 	}
-	dassert(0, "unexpected case");
-	return 0;
+	n->sub_prog_size = sz;
+	return sz;
 }
 static inline void modify_indices(instruction* inst, size_t len, size_t offset)
 {
@@ -433,7 +443,7 @@ program* compile_regex(char* str, re_error* error, size_t *num_regs, size_t* num
 	state.next_loop_var = 0;
 
 	compile_recursive(&state, tree);
-	compile_op(&state, I_MATCH);//last instruction should always be a match
+	op(&state, I_MATCH);//last instruction should always be a match
 	*num_regs = state.next_save_reg  + state.max_loop_vars;
 	*num_capture_regs = state.next_save_reg;
 	

@@ -45,6 +45,7 @@ struct parse_state
 	lexer lxr;
 	fat_stack* tokens;
 };
+
 enum stop_criteria
 {
 	SHOULD_STOP_AT_LPAREN = 0x1,
@@ -451,6 +452,7 @@ error:
 	if(single_node != NULL) free_node(single_node);
 	return 0;
 }
+
 static int push_token(struct parse_state *state, token tok, re_error* er)
 {
 	stack_token st;

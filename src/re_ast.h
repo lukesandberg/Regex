@@ -2,6 +2,7 @@
 #define __RE_AST_H__
 
 #include <util/linked_list.h>
+#include <stddef.h>
 
 typedef enum
 {
@@ -27,6 +28,9 @@ typedef enum
 typedef struct
 {
 	node_type type;
+	unsigned int start_char;
+	unsigned int end_char;
+	size_t sub_prog_size;
 } ast_node;
 
 typedef struct
