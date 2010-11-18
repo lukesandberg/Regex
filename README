@@ -1,6 +1,16 @@
 This project was designed to learn more about finite state machines 
 and in general good c design.
 
+11/18/2010
+A lot of refactoring has gone into the compiler and a little bit has gone into the 
+parser.  I will be focusing on simplifying the parser error handling and then the
+next major piece will be bracket expressions and character class handling.  I also
+have an idea for changing the regex struct to eliminate a call to malloc.  Also i 
+will be providing a few helper procedures and macros to encapsulate the pattern of 
+malloc -> test -> initialize pattern. this should also allow me to better test
+error handling in low memory situations. (i.e. clean up state and return an appropriate
+error without leaking memory)
+
 11/14/2010
 I am very confident about counted repetition expressions at this point. There are
 a number of passing tests that pretty well test the feature.  Next the parser will be
