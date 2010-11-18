@@ -10,6 +10,7 @@ static const char *error_messages[NUM_ERROR_CODES] =
 	"expected a token",
 	"missing operator argument",
 	"system out of memory",
+	"expected a number"
 	"unknown token"
 };
 static const char* unknown_error_msg = "unknown error code";

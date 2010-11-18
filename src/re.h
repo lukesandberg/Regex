@@ -18,6 +18,7 @@ typedef enum
 	E_EXPECTED_TOKEN,
 	E_MISSING_OP_ARGUMENT,
 	E_OUT_OF_MEMORY,
+	E_EXPECTED_NUM,
 	NUM_ERROR_CODES
 } re_error_code;
 
