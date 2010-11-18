@@ -81,6 +81,8 @@ char* TestAlternation()
 	mu_assert("alt basic test: match left", match("ab|cd", "ab"));
 	mu_assert("alt basic test: match right", match("ab|cd", "cd"));
 	mu_assert("alt sanity check", !match("ab|cd", "ad"));
+	mu_assert("alt with empty 1", match("a(|b)c", "abc"));
+	mu_assert("alt with empty 2", match("a(|b)c", "ac"));
 	return NULL;
 }
 char* TestSubExpression()
