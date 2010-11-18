@@ -23,6 +23,7 @@ static inline void compile_star(struct compile_state *state, unary_node* n, int 
 static inline void compile_char(struct compile_state *state, char_node* n);
 static inline void compile_crep(struct compile_state *state, loop_node* n);
 
+static inline unsigned int current_index(struct compile_state* state);
 static inline void op(struct compile_state *state, op_code op);
 static inline void jmp(struct compile_state * state, unsigned int target);
 static inline void incr(struct compile_state * state, unsigned int reg);
@@ -79,18 +80,24 @@ static void compile_recursive(struct compile_state *state, ast_node* n)
 	}
 }
 
+static inline unsigned int current_index(struct compile_state* state)
+{
+	return state->inst - state->first;
+}
 
 static inline void op(struct compile_state *state, op_code op)
 {
 	state->inst->op = op;
 	state->inst++;
 }
+
 static inline void save(struct compile_state * state, unsigned int sr)
 {
 	state->inst->op = I_SAVE;
 	state->inst->v.save_register = sr;
 	state->inst++;
 }
+
 static inline void jmp(struct compile_state * state, unsigned int target)
 {
 	state->inst->op = I_JMP;
@@ -160,9 +167,9 @@ static inline void compile_crep(struct compile_state *state, loop_node* n)
 	}
 	setz(state, reg);
 	
-	unsigned int L1 = state->inst - state->first;
+	unsigned int L1 = current_index(state);
 	unsigned int L2 = L1 + 1;
-	unsigned int L3 = L2 + n->base.expr->sub_prog_size + 3;//plus 2 for the incr and the jmp
+	unsigned int L3 = L2 + n->base.expr->sub_prog_size + 3;//plus 3 for the incr, jmp and dlt
 	split(state, L2, L3, 0);
 
 	comp(state, I_DGTEQ, reg, n->max);
@@ -185,7 +192,7 @@ L2:
  */
 static inline void compile_qmark(struct compile_state *state, unary_node* n, int ng)
 {
-	unsigned int L1 = state->inst - state->first + 1;
+	unsigned int L1 = current_index(state) + 1;
 	unsigned int L2 = L1 + n->expr->sub_prog_size;
 	split(state, L1, L2, ng);
 	compile_recursive(state, n->expr);
@@ -199,12 +206,11 @@ L2:
 */
 static inline void compile_plus(struct compile_state *state, unary_node* n, int ng)
 {
-	unsigned int L1 = state->inst - state->first;
+	unsigned int L1 = current_index(state);
 
 	compile_recursive(state, n->expr);
-	unsigned int L2 = state->inst - state->first + 1;
+	unsigned int L2 = current_index(state) + 1;
 	split(state, L1, L2, ng);
-
 }
 
 /*
@@ -229,53 +235,32 @@ L3:
  */
 static void compile_alt(struct compile_state *state, multi_node* n)
 {//we know that there are at least two items on this list
-
-	unsigned int end = n->base.sub_prog_size + state->inst - state->first;
+	unsigned int start = current_index(state);
+	unsigned int end = n->base.sub_prog_size + start;
 	
 	linked_list_node* last = linked_list_last(n->list);
 	linked_list_node* first = linked_list_first(n->list);
 	linked_list_node* current = first;
-	linked_list_node* next = linked_list_next(current);
-	instruction* first_split = state->inst;
 	
-	while(next != last)
+	unsigned int Li = start + linked_list_size(n->list) - 1;
+	unsigned int LDi = start + 1;
+	for(linked_list_node* next = linked_list_next(current); next != last; current = next, next = linked_list_next(next))
 	{
-		instruction* split = state->inst;
-		split->op = I_SPLIT;
-		state->inst++;
-		split->v.split.right = state->inst - state->first;
-		current = next;
-		next = linked_list_next(next);
+		split(state, Li, LDi, 0);
+		LDi++;
+		Li += ((ast_node*) linked_list_value(current))->sub_prog_size + 1;
 	}
-	
-	instruction* last_split = state->inst;
-	last_split->op = I_SPLIT;
-	state->inst++;
+	unsigned int Ln = Li + ((ast_node*) linked_list_value(current))->sub_prog_size + 1;
+	split(state, Li, Ln, 0);
 	
 	current = first;
-	instruction* cur_split = first_split;
-	while(current != NULL)
+	for(current = first; current != last; current = linked_list_next(current))
 	{
-		unsigned int li = state->inst - state->first;
-		if(current == last)
-		{
-			cur_split->v.split.right = li;
-		}
-		else
-		{
-			cur_split->v.split.left = li;
-		}
 		compile_recursive(state, (ast_node*) linked_list_value(current));
-		
-		if(current != last)
-		{
-			//every one but the last gets a jmp
-			jmp(state, end);
-		}
-		current = linked_list_next(current);
-		if(current != last)
-			cur_split++;
+		//every one but the last gets a jmp
+		jmp(state, end);
 	}
+	compile_recursive(state, (ast_node*) linked_list_value(current));
 }
 
 /*
@@ -305,7 +290,7 @@ L3:
 */
 static inline void compile_star(struct compile_state* state, unary_node* n, int ng)
 {
-	unsigned int L1 = state->inst - state->first;
+	unsigned int L1 = current_index(state);
 	unsigned int L2 = L1 + 1;
 	unsigned int L3 = L2 + n->expr->sub_prog_size + 1;
 
