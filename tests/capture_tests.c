@@ -16,7 +16,7 @@ int capture(char* re_str, char* str, capture_group** cg)
 	return m;
 }
 
-static char* TestCaptureEverything()
+static int TestCaptureEverything()
 {
 	capture_group* cg;
 	mu_assert("should match", capture("(.*)", "adsfasdf", &cg));
@@ -26,10 +26,10 @@ static char* TestCaptureEverything()
 	mu_assert("first char should be a", *start == 'a');
 	mu_assert("last char should be f", *end == '\0');
 	free(cg);
-	return NULL;
+	return 1;
 }
 
-static char* TestCaptureGreediness()
+static int TestCaptureGreediness()
 {
 	capture_group* cg;
 	mu_assert("should match", capture("(.*)df", "asdfasdf", &cg));
@@ -43,10 +43,10 @@ static char* TestCaptureGreediness()
 	start = cg_get_capture(cg, 0, &end);
 	mu_assert("non greedy capture should match asdfas", strncmp(start, "as", 2) == 0);
 	free(cg);
-	return NULL;
+	return 1;
 }
 
-static char* TestCountedRepCapture()
+static int TestCountedRepCapture()
 {
 	capture_group* cg;
 	char *start, *end;
@@ -54,9 +54,9 @@ static char* TestCountedRepCapture()
 	start = cg_get_capture(cg, 0, &end);
 	mu_assert("capture should match ab", strncmp(start, "ab", 2) == 0);
 	free(cg);
-	return NULL;
+	return 1;
 }
-static char* TestStarCaptureInteraction()
+static int TestStarCaptureInteraction()
 {
 	capture_group* cg;
 	char *start, *end;
@@ -64,7 +64,7 @@ static char* TestStarCaptureInteraction()
 	start = cg_get_capture(cg, 0, &end);
 	mu_assert("capture should match ab", strncmp(start, "ab", 2) == 0);
 	free(cg);
-	return NULL;
+	return 1;
 }
 void test_captures()
 {

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static char* TestSingleMatch()
+static int TestSingleMatch()
 {
 	size_t nr, nc;
 	program* prog = compile_regex("a", NULL, &nr, &nc);
@@ -12,10 +12,10 @@ static char* TestSingleMatch()
 	mu_assert("first inst is rule", prog->code[0].op == I_CHAR);
 	mu_assert("second inst is match", prog->code[1].op == I_MATCH);
 	free(prog);
-	return NULL;
+	return 1;
 }
 
-static char* TestStar()
+static int TestStar()
 {
 	size_t nr, nc;
 	program* prog = compile_regex("a*", NULL, &nr, &nc);
@@ -25,10 +25,10 @@ static char* TestStar()
 	mu_assert("third inst is jmp", prog->code[2].op == I_JMP);
 	mu_assert("final inst is match", prog->code[3].op == I_MATCH);
 	free(prog);
-	return NULL;
+	return 1;
 }
 
-static char* TestConcat()
+static int TestConcat()
 {
 	size_t nr, nc;
 	program* prog = compile_regex("ab", NULL, &nr, &nc);
@@ -37,19 +37,19 @@ static char* TestConcat()
 	mu_assert("second inst is rule", prog->code[1].op == I_CHAR);
 	mu_assert("third inst is match", prog->code[2].op == I_MATCH);
 	free(prog);
-	return NULL;
+	return 1;
 }
-static char* TestInvalid()
+static int TestInvalid()
 {
 	size_t nr, nc;
 	re_error er;
 	program* prog = compile_regex("*", &er, &nr, &nc);
 	mu_assert("program is NULL", prog == NULL);
 	mu_assert("error is unexpected star", er.errno = E_UNEXPECTED_TOKEN);
-	return NULL;
+	return 1;
 }
 
-static char* TestAlternation()
+static int TestAlternation()
 {
 	size_t nr, nc;
 	re_error er;
@@ -69,9 +69,9 @@ static char* TestAlternation()
 	mu_assert("eighth inst is match", prog->code[7].op == I_MATCH);
 	
 	free(prog);
-	return NULL;
+	return 1;
 }
-static char* TestLoop()
+static int TestLoop()
 {
     	size_t nr, nc;
 	re_error er;
@@ -89,7 +89,7 @@ static char* TestLoop()
 	mu_assert("dlt comparison should be reg 0 >= 2", prog->code[6].v.comparison.idx == 0 && prog->code[6].v.comparison.comp == 2);
 	mu_assert("eigth inst is match", prog->code[7].op == I_MATCH);
 	free(prog);
-	return NULL;
+	return 1;
 }
 
 void test_compiler()

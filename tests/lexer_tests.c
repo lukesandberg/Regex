@@ -3,7 +3,7 @@
 #include <re_lexer.h>
 #include <stdio.h>
 
-static char* TestSimple()
+static int TestSimple()
 {
 	lexer l;
 	char* ss = "a";
@@ -12,9 +12,9 @@ static char* TestSimple()
 	mu_assert("should be CHAR token", t.type == CHAR_TOK);
 	t = read_token(&l);
 	mu_assert("should be END token", t.type == END_TOK);
-	return NULL;
+	return 1;
 }
-static char* TestInvalid()
+static int TestInvalid()
 {
 	lexer l;
 	char* ss = "\\a";
@@ -23,9 +23,9 @@ static char* TestInvalid()
 	mu_assert("should be INVALID token", t.type == INVALID_TOK);
 	t = read_token(&l);
 	mu_assert("should be END token", t.type == END_TOK);
-	return NULL;
+	return 1;
 }
-static char* TestOperators()
+static int TestOperators()
 {
 	lexer l;
 	char* ops = "*+|()?";
@@ -42,9 +42,9 @@ static char* TestOperators()
 	mu_assert("should be RPAREN", t.type == RPAREN_TOK);
 	t = read_token(&l);
 	mu_assert("should be QMARK", t.type == QMARK_TOK);
-	return NULL;
+	return 1;
 }
-static char* TestCharClasses()
+static int TestCharClasses()
 {
 	lexer l;
 	char* ss = ".\\s\\d\\w";
@@ -57,9 +57,9 @@ static char* TestCharClasses()
 	mu_assert("should be DIGIT", t.type == DIGIT_TOK);
 	t = read_token(&l);
 	mu_assert("should be ALPHA", t.type == ALPHA_TOK);
-	return NULL;
+	return 1;
 }
-static char* TestEscapeSequences()
+static int TestEscapeSequences()
 {
 	lexer l;
 	char* ss = "\\\\\\+\\*\\?\\%";
@@ -80,10 +80,10 @@ static char* TestEscapeSequences()
 	mu_assert("should be INVALID", t.type == INVALID_TOK);
 	t = read_token(&l);
 	mu_assert("should be END", t.type == END_TOK);
-	return NULL;
+	return 1;
 }
 
-static char* TestCountedRepetitions()
+static int TestCountedRepetitions()
 {
 	lexer l;
 	char* ts = "a{   2    }";
@@ -118,7 +118,7 @@ static char* TestCountedRepetitions()
 	mu_assert("should be WILDCARD_TOK", t.type == WILDCARD_TOK);
 	t = read_token(&l);
 	mu_assert("should be STAR_TOK", t.type == STAR_TOK);
-	return NULL;
+	return 1;
 }
 
 void test_lexer()

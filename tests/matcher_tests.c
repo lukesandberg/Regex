@@ -16,12 +16,12 @@ int match(char* re_str, char* str)
 	return m;
 }
 
-char* TestBasic()
+static int TestBasic()
 {
 	mu_assert("should simple match", match("a", "a"));
-	return NULL;
+	return 1;
 }
-char* TestWildCard()
+static int TestWildCard()
 {
 	mu_assert("should match using wildcard", match("asd.", "asdf"));
 	mu_assert("escaped wildcard should not match", !match("asd\\.", "asdf"));
@@ -29,73 +29,73 @@ char* TestWildCard()
 	mu_assert("wildcard should not match empty string", !match(".", ""));
 	mu_assert("double wildcard", match("..", "zg"));
 	mu_assert("double wildcard, with prefix", match("a..", "azg"));
-	return NULL;
+	return 1;
 }
-char* TestEmptyRegex()
+static int TestEmptyRegex()
 {
 	mu_assert("empty regex should match empty string", match("", ""));
 	mu_assert("empty regex should not match non empty string", !match("", "a"));
-	return NULL;
+	return 1;
 }
-char* TestReuseRegex()
+static int TestReuseRegex()
 {
 	regex* re = regex_create("asd.", NULL);
 	mu_assert("should match", regex_matches(re, "asdf", NULL));
 	mu_assert("should match again", regex_matches(re, "asdf", NULL));
 	mu_assert("should not", !regex_matches(re, "", NULL));
 	regex_destroy(re);
-	return NULL;
+	return 1;
 }
-char* TestCharacterClass()
+static int TestCharacterClass()
 {
 	mu_assert("space should match", match("\\s", " "));
 	mu_assert("tab should match", match("\\s", "\t"));
 	mu_assert("alpha should match", match("\\w", "b"));
 	mu_assert("match multiple digit", match("\\d\\d", "12"));
-	return NULL;
+	return 1;
 }
-char* TestStar()
+static int TestStar()
 {
 	mu_assert("star should match zero times", match("a*",""));
 	mu_assert("star should match one times", match("a*","a"));
 	mu_assert("star should match two times", match("a*","aa"));
 	mu_assert("star should match many times", match("a*","aaaaaaaaaa"));
-	return NULL;
+	return 1;
 }
-char* TestQMark()
+static int TestQMark()
 {
 	mu_assert("qmark should match zero times", match("a?", ""));
 	mu_assert("qmark should match one times", match("a?", "a"));
 	mu_assert("qmark should not match more than once", !match("a?", "aa"));
-	return NULL;
+	return 1;
 }
-char* TestPlus()
+static int TestPlus()
 {
 	mu_assert("plus should not match zero times", !match("a+", ""));
 	mu_assert("plus should match one times", match("a+", "a"));
 	mu_assert("plus shuold match many times",match("a+", "aaaaaaaaaaaaaaaaa"));
-	return NULL;
+	return 1;
 }
-char* TestAlternation()
+static int TestAlternation()
 {
 	mu_assert("alt basic test: match left", match("ab|cd", "ab"));
 	mu_assert("alt basic test: match right", match("ab|cd", "cd"));
 	mu_assert("alt sanity check", !match("ab|cd", "ad"));
 	mu_assert("alt with empty 1", match("a(|b)c", "abc"));
 	mu_assert("alt with empty 2", match("a(|b)c", "ac"));
-	return NULL;
+	return 1;
 }
-char* TestSubExpression()
+static int TestSubExpression()
 {
 	mu_assert("basic sub expression", match("a(bc)d", "abcd"));
 	mu_assert("repeated group", match("(ab)*", "ababab"));
 	mu_assert("nested groups", match("(ab(cd)*ef)+", "abcdcdefabcdcdcdef"));
 	mu_assert("sub alternation 1", match("a(b|c)d", "acd"));
 	mu_assert("sub alternation 2", match("a(b|c)d", "abd"));
-	return NULL;
+	return 1;
 }
 
-char* TestCountedRep()
+static int TestCountedRep()
 {
 	mu_assert("basic counted rep match: \"a{2}\", \"aa\"", match("a{2}", "aa"));
 	mu_assert("range counted rep no match: \"a{2,4}\", \"a\"", !match("a{2,4}", "a"));
@@ -103,9 +103,9 @@ char* TestCountedRep()
 	mu_assert("range counted rep match: \"a{2,4}\", \"aaa\"", match("a{2,4}", "aaa"));
 	mu_assert("range counted rep match: \"a{2,4}\", \"aaaa\"", match("a{2,4}", "aaaa"));
 	mu_assert("range counted rep no match: \"a{2,4}\", \"aaaaa\"", !match("a{2,4}", "aaaaa"));
-	return NULL;
+	return 1;
 }
-char* TestGroupRepetitions()
+static int TestGroupRepetitions()
 {
 	mu_assert("basic group counted rep match: \"(abc){2}\", \"aa\"", match("(abc){2}", "abcabc"));
 	mu_assert("range group counted rep no match: \"(abc){2,4}\", \"abc\"", !match("(abc){2,4}", "abc"));
@@ -113,9 +113,9 @@ char* TestGroupRepetitions()
 	mu_assert("range group counted rep match: \"(abc){2,4}\", \"abcabcabc\"", match("(abc){2,4}", "abcabcabc"));
 	mu_assert("range group counted rep match: \"(abc){2,4}\", \"abcabcabcabc\"", match("(abc){2,4}", "abcabcabcabc"));
 	mu_assert("range group counted rep no match: \"(abc){2,4}\", \"abcabcabcabcabc\"", !match("(abc){2,4}", "abcabcabcabcabc"));
-	return NULL;
+	return 1;
 }
-void  test_matcher()
+void test_matcher()
 {
 	printf("Testing Matcher\n");
 	mu_run_test(TestEmptyRegex);

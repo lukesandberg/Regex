@@ -12,7 +12,7 @@ void start_timer()
 {
 	gettimeofday(&start_time, NULL);
 }
-char* stop_and_print_timer()
+static char* stop_and_print_timer()
 {
 	static char buf[100];
 	struct timeval end_time;
@@ -23,7 +23,7 @@ char* stop_and_print_timer()
 	return buf;
 }
 
-char* repeat(char* pattern, long long times)
+static char* repeat(char* pattern, long long times)
 {
 	size_t len = strlen(pattern);
 	char* buf = malloc(times*len + 1);
@@ -37,7 +37,7 @@ char* repeat(char* pattern, long long times)
 	return buf;
 }
 
-char* acat(char* left, char* right)
+static char* acat(char* left, char* right)
 {
 	size_t ll = strlen(left);
 	size_t rl = strlen(right);
@@ -48,7 +48,7 @@ char* acat(char* left, char* right)
 	return buf;
 }
 
-char* TestLongExp(long long rep)
+static char* TestLongExp(long long rep)
 {
 	char* l = repeat("a?", rep);
 	char* r = repeat("a", rep);
