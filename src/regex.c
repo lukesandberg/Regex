@@ -110,7 +110,7 @@ static void free_list(struct re_run_state* state, sparse_map* lst)
 
 static inline capture_group* extract_capture_groups(struct re_run_state* state, thread_state* ts)
 {
-	capture_group* cg = (capture_group*) malloc(sizeof(capture_group) + sizeof(char*) * state->re->num_capture_regs);
+	capture_group* cg = NEWE(capture_group, sizeof(char*) * state->re->num_capture_regs);
 	if(cg == NULL)
 		return NULL;
 	unsigned int len = state->re->num_capture_regs;
@@ -239,7 +239,7 @@ regex* regex_create(char* re_str, re_error* er)
 	program *prog = compile_regex(re_str, er, &num_regs, &num_capture_regs);
 	if(prog == NULL) 
 		return NULL;
-	regex * re = (regex*) malloc(sizeof(regex));
+	regex * re = NEW(regex);
 	if(re == NULL)
 	{
 		if(er != NULL)
@@ -247,7 +247,7 @@ regex* regex_create(char* re_str, re_error* er)
 			er->errno = E_OUT_OF_MEMORY;
 			er->position = -1;
 		}
-		free(prog);
+		rfree(prog);
 		return NULL;
 	}
 	re->num_registers = num_regs;
@@ -259,6 +259,6 @@ regex* regex_create(char* re_str, re_error* er)
 
 void regex_destroy(regex* re)
 {
-	free(re->prog);
-	free(re);
+	rfree(re->prog);
+	rfree(re);
 }

@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <util/util.h>
 
 typedef struct _ts_s
 {
@@ -19,7 +20,7 @@ typedef struct _tsc_s
 
 static inline ts_cache* make_ts_cache(size_t sz)
 {
-	ts_cache* cache = (ts_cache*) malloc(sizeof(ts_cache) + sizeof(thread_state*) * sz);
+	ts_cache* cache = NEWE(ts_cache, sizeof(thread_state*) * sz);
 	if(cache == NULL)
 		return NULL;
 	cache->n = 0;
@@ -29,9 +30,9 @@ static inline void free_ts_cache(ts_cache* c)
 {
 	for(unsigned int i = 0; i < c->n; i++)
 	{
-		free(c->ts_cache[i]);
+		rfree(c->ts_cache[i]);
 	}
-	free(c);
+	rfree(c);
 }
 
 static inline thread_state* make_thread_state(ts_cache* cache, size_t sz)
@@ -44,7 +45,7 @@ static inline thread_state* make_thread_state(ts_cache* cache, size_t sz)
 	}
 	else
 	{
-		c = (thread_state*) malloc(sizeof(thread_state) + sizeof(unsigned int) * sz);
+		c = NEWE(thread_state, sizeof(unsigned int) * sz);
 		if(c == NULL) return NULL;
 		c->sz = sz;
 	}

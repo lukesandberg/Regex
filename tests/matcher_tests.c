@@ -83,6 +83,16 @@ static int TestAlternation()
 	mu_assert("alt sanity check", !match("ab|cd", "ad"));
 	mu_assert("alt with empty 1", match("a(|b)c", "abc"));
 	mu_assert("alt with empty 2", match("a(|b)c", "ac"));
+	char* large_alt = "a|b|c|d|e|f|g|h|i|j|k|l||m|n|o|p|q|r|s|t|u|v|w|x|y|z";
+	char* letters[26] = {"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"};
+	char buf[28];
+	for(int i = 0; i < 26; i++)
+	{
+		char* msg = "large alternation test %s";
+		sprintf(buf, msg, letters[i]);
+		mu_assert(buf, match(large_alt, letters[i]));
+	}
+
 	return 1;
 }
 static int TestSubExpression()

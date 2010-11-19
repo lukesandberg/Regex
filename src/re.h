@@ -38,7 +38,6 @@ int regex_matches(regex* re, char *str, capture_group** caps);
 const char* re_error_description(re_error er);
 void re_error_print(re_error er);
 
-
 char* cg_get_capture(capture_group* cg, unsigned int n, char**end);
 unsigned int cg_get_num_captures(capture_group* cg);
 #endif

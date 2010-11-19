@@ -5,11 +5,12 @@
 #include <stdlib.h>
 
 static int mem_mix = 0xdeadbeef;
-
+unsigned int mem_fail_count;
+unsigned int mem_usage;
 void debug(debug_level level, const char* fmt, ...)
 {
 #ifdef DEBUG
-	if(level == DEBUG_TYPE)
+	if(level == DEBUG_LEVEL)
 	{
 		va_list args;
 		va_start(args, fmt);
@@ -35,27 +36,35 @@ void dassert(int check, const char* msg)
 #endif
 }
 
-void* checked_malloc(size_t sz)
+void* rmalloc(size_t sz)
 {
-	void* rval = malloc(sz);
-	if(rval == NULL)
+#ifdef MEM_TEST
+	if(mem_fail_count > 0)
 	{
-		fprintf(stderr, "out of memory!\n");
-		exit(1);
+		mem_fail_count--;
+		
+		void* mem = malloc(sz + sizeof(size_t));
+		if(mem == NULL)
+			return NULL;
+		mem_usage += sz;
+		*((size_t*) mem) = sz;//store the size of the block
+		return mem + sizeof(size_t);//return the block just past the size
 	}
-	memset(rval, 0, sz);
-	return rval;
+	else
+	{
+		return NULL;
+	}	
+#else
+	return malloc(sz);
+#endif
 }
 
-void checked_free(void *ptr)
+void rfree(void *ptr)
 {
-	if(ptr == NULL)
-	{
-		fprintf(stderr, "attempting to free a null object!\n");
-		exit(1);
-	}
-	int *iptr = ptr;
-	*iptr = mem_mix;//trash the first word of the region
+#ifdef MEM_TEST	
+	ptr = ptr - sizeof(size_t);
+	mem_usage -= *((size_t*) ptr);
+#endif
 	free(ptr);
 }
 

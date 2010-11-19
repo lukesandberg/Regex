@@ -171,17 +171,11 @@ static inline void compile_crep(struct compile_state *state, loop_node* n)
 	unsigned int L2 = L1 + 1;
 	unsigned int L3 = L2 + n->base.expr->sub_prog_size + 3;//plus 3 for the incr, jmp and dlt
 	split(state, L2, L3, 0);
-
 	comp(state, I_DGTEQ, reg, n->max);
-
 	compile_recursive(state, n->base.expr);
-
 	incr(state, reg);
-
 	jmp(state, L1);
-
 	comp(state, I_DLT, reg, n->min);
-
 	state->next_loop_var--;
 }
 /*
@@ -407,7 +401,7 @@ program* compile_regex(char* str, re_error* error, size_t *num_regs, size_t* num
 	tree = optimize(tree);
 
 	size_t sz = program_size(tree) + 1;//we add one for the final match inst
-	program* prog = malloc(sizeof(program) + sz * sizeof(instruction));
+	program* prog = NEWE(program, sz * sizeof(instruction));
 	
 	if(prog == NULL)
 	{

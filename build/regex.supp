@@ -1,0 +1,15 @@
+#this file contains valgrind suppression rules specific to the Regex project.
+#mostly valgrind freaks out due to the sparse_map data structure which by
+#definition uses unitialized memory
+{
+	lib-re-sparse-map-contains-value4
+	Memcheck:Value4
+	fun:sparse_map_contains
+	fun:add_to_list
+}
+{
+	lib-re-sparse-map-contains-cond
+	Memcheck:Cond
+	fun:sparse_map_contains
+	fun:add_to_list
+}

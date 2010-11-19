@@ -1,6 +1,6 @@
 #include "sparse_map.h"
 #include <stdlib.h>
-
+#include <util/util.h>
 struct _sparse_map_s
 {
 	void** values;
@@ -11,13 +11,13 @@ struct _sparse_map_s
 
 sparse_map* make_sparse_map(size_t max)
 {
-	sparse_map* map = (sparse_map*) malloc(sizeof(sparse_map) + sizeof(unsigned int) * max * 2);
+	sparse_map* map = NEWE(sparse_map, sizeof(unsigned int) * max * 2);
 	if(map == NULL) 
 		return NULL;
-	void** vals = (void**) malloc(sizeof(void*)*max);
+	void** vals = rmalloc(sizeof(void*)*max);
 	if(vals == NULL) 
 	{
-		free(map);
+		rfree(map);
 		return NULL;
 	}
 	
@@ -49,8 +49,8 @@ static inline unsigned int get_sparse(sparse_map* map, unsigned int n)
 
 void free_sparse_map(sparse_map* map)
 {
-	free(map->values);
-	free(map);
+	rfree(map->values);
+	rfree(map);
 }
 
 void sparse_map_set(sparse_map* map, unsigned int i, void* v)

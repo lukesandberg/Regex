@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "linked_list.h"
-
+#include <util/util.h>
 struct _ll_node
 {
 	struct _ll_node * next;
@@ -18,7 +18,7 @@ struct _ll_list
 
 linked_list* make_linked_list()
 {
-	linked_list* ll = (linked_list*) malloc(sizeof(linked_list));
+	linked_list* ll = NEW(linked_list);
 	if(ll != NULL)
 	{
 		ll->first = NULL;
@@ -32,7 +32,7 @@ void linked_list_destroy(linked_list* ll)
 {
 	while(ll->first != NULL)
 		linked_list_remove_first(ll);
-	free(ll);
+	rfree(ll);
 }
 
 void* linked_list_remove_first(linked_list* ll)
@@ -50,7 +50,7 @@ void* linked_list_remove_first(linked_list* ll)
 		ll->first = n->next;
 		ll->first->prev = NULL;
 	}
-	free(n);
+	rfree(n);
 	ll->sz--;
 	return v;
 }
@@ -69,13 +69,13 @@ void* linked_list_remove_last(linked_list* ll)
 		ll->last = n->prev;
 		ll->last->next = NULL;
 	}
-	free(n);
+	rfree(n);
 	ll->sz--;
 	return v;
 }
 int linked_list_add_first(linked_list* ll, void* d)
 {
-	linked_list_node* n = (linked_list_node*) malloc(sizeof(linked_list_node));
+	linked_list_node* n = NEW(linked_list_node);
 	if(n == NULL) return 0;
 	n->next = ll->first;
 	n->prev = NULL;
@@ -89,7 +89,7 @@ int linked_list_add_first(linked_list* ll, void* d)
 }
 int linked_list_add_last(linked_list* ll, void* d)
 {
-	linked_list_node* n = (linked_list_node*) malloc(sizeof(linked_list_node));
+	linked_list_node* n = NEW(linked_list_node);
 	if(n == NULL) return 0;
 	n->prev = ll->last;
 	n->next = NULL;
