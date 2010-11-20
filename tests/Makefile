@@ -3,7 +3,7 @@ include ../build/Makefile.inc
 SRCS=$(wildcard *.c )
 OBJS=$(SRCS:.c=.o)
 INCLUDES=-I. -I../src
-CFLAGS=$(PRJCFLAGS) $(INCLUDES)
+CFLAGS= -g $(INCLUDES)
 
 
 EXE=../build/$(TESTNAME)
@@ -14,7 +14,6 @@ all: $(EXE)
 $(EXE) : $(OBJS) $(LIB)
 	$(CC) $(CFLAGS) $(OBJS) $(LIB) -o $(EXE)
 clean:
-	$(ECHO) cleaning testb
 	$(RM) -f $(OBJS)
 	$(RM) -f $(EXE)
 

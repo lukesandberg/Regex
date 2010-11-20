@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "memory_tests.h"
 
 void run_tests()
 {
@@ -18,6 +19,7 @@ void run_tests()
 	test_compiler();
 	test_matcher();
 	test_captures();
+	test_memory();
 	mu_print_summary();
 }
 
@@ -69,7 +71,7 @@ int main(int argc, char**argv)
 				char* start = cg_get_capture(cg, i, &end);
 				printf("%i:\t%.*s\n", i/2, (end - start), start);
 			}
-			free(cg);
+			cg_destroy(cg);
 		}
 	}
 	else if(argc == 2 && argv[1][0] == 'f')//fuzz

@@ -18,11 +18,9 @@ perf: $(TESTNAME)
 	bash -c "./$(TESTNAME) p"
 
 $(LIBNAME) : force_look
-	$(ECHO) checking lib
 	cd ../src; $(MAKE)
 
 $(TESTNAME) : force_look $(LIBNAME)
-	$(ECHO) checking test
 	cd ../tests; $(MAKE)
 
 

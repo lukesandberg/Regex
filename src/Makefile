@@ -14,7 +14,6 @@ $(LIB) : $(OBJS)
 	$(RANLIB) $(LIB)
 
 clean:
-	$(ECHO) cleaning lib
 	$(RM) -f $(OBJS)
 	$(RM) $(LIB)
 

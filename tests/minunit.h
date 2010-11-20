@@ -22,7 +22,7 @@
 
 extern int tests_run;
 extern int verbose;
-void mu_start_test();
+void mu_start_test(char* tn);
 void mu_succeed();
 void mu_fail(char* msg, char* filename, unsigned int ln);
 void mu_print_summary();

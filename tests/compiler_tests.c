@@ -3,6 +3,7 @@
 #include <re_compiler.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <util/util.h>
 
 static int TestSingleMatch()
 {
@@ -11,7 +12,7 @@ static int TestSingleMatch()
 	mu_assert("program length", prog->size ==  2);
 	mu_assert("first inst is rule", prog->code[0].op == I_CHAR);
 	mu_assert("second inst is match", prog->code[1].op == I_MATCH);
-	free(prog);
+	rfree(prog);
 	return 1;
 }
 
@@ -24,7 +25,7 @@ static int TestStar()
 	mu_assert("second inst is rule", prog->code[1].op == I_CHAR);
 	mu_assert("third inst is jmp", prog->code[2].op == I_JMP);
 	mu_assert("final inst is match", prog->code[3].op == I_MATCH);
-	free(prog);
+	rfree(prog);
 	return 1;
 }
 
@@ -36,7 +37,7 @@ static int TestConcat()
 	mu_assert("first inst is split", prog->code[0].op == I_CHAR);
 	mu_assert("second inst is rule", prog->code[1].op == I_CHAR);
 	mu_assert("third inst is match", prog->code[2].op == I_MATCH);
-	free(prog);
+	rfree(prog);
 	return 1;
 }
 static int TestInvalid()
@@ -68,7 +69,7 @@ static int TestAlternation()
 	mu_assert("seventh inst is CHAR", prog->code[6].op == I_CHAR);
 	mu_assert("eighth inst is match", prog->code[7].op == I_MATCH);
 	
-	free(prog);
+	rfree(prog);
 	return 1;
 }
 static int TestLoop()
@@ -88,7 +89,7 @@ static int TestLoop()
 	mu_assert("seventh inst is dlt", prog->code[6].op == I_DLT);
 	mu_assert("dlt comparison should be reg 0 >= 2", prog->code[6].v.comparison.idx == 0 && prog->code[6].v.comparison.comp == 2);
 	mu_assert("eigth inst is match", prog->code[7].op == I_MATCH);
-	free(prog);
+	rfree(prog);
 	return 1;
 }
 

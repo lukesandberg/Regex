@@ -1,4 +1,4 @@
-#include <parser_tests.h>
+#include "parser_tests.h"
 #include <minunit.h>
 #include <re_parser.h>
 #include <stdio.h>

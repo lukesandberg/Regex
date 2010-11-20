@@ -395,13 +395,14 @@ static int do_concat(struct parse_state* state, re_error *er, enum stop_criteria
 	}
 
 	ast_node* node;
+	ast_node* empty = NULL;
 	if(cat != NULL)
 		node =  (ast_node*) cat;
 	else if(single_node != NULL)
 		node =  single_node;
 	else
 	{
-		ast_node* empty = make_node(EMPTY);
+		empty = make_node(EMPTY);
 		if(empty == NULL)
 		{
 			parse_error(E_OUT_OF_MEMORY, -1);
@@ -420,6 +421,7 @@ static int do_concat(struct parse_state* state, re_error *er, enum stop_criteria
 error:
 	if(cat != NULL) free_node((ast_node*) cat);
 	if(single_node != NULL) free_node(single_node);
+	if(empty != NULL) free_node(empty);
 	return 0;
 }
 

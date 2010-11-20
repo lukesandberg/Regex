@@ -40,4 +40,5 @@ void re_error_print(re_error er);
 
 char* cg_get_capture(capture_group* cg, unsigned int n, char**end);
 unsigned int cg_get_num_captures(capture_group* cg);
+void cg_destroy(capture_group* cap);
 #endif

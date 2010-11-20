@@ -4,9 +4,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-static int mem_mix = 0xdeadbeef;
-unsigned int mem_fail_count;
-unsigned int mem_usage;
+unsigned int mem_fail_count = 0xffffffu;
+unsigned int mem_usage = 0;
 void debug(debug_level level, const char* fmt, ...)
 {
 #ifdef DEBUG
@@ -70,9 +69,8 @@ void rfree(void *ptr)
 
 char* copy_cstring(const char* s)
 {
-	int len = strlen(s);
-	char* ns = (char*) checked_malloc(len + 1);
+	int len = strlen(s) + 1;//+1 for the '\0' byte
+	char* ns = (char*) rmalloc(len);
 	memcpy(ns, s, len);
-	ns[len] = '\0';
 	return ns;
 }

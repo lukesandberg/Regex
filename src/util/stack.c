@@ -17,7 +17,7 @@ struct stack_s
 
 stack* stack_create()
 {
-	stack* stk = (stack*) checked_malloc(sizeof(stack));
+	stack* stk = NEW(stack);
 	stk->top = NULL;
 	stk->entries = 0;
 	return stk;
@@ -32,7 +32,7 @@ int stack_size(stack* stk)
 }
 static list_entry* create_entry(list_entry* next, void* val)
 {
-	list_entry* entry = (list_entry*) checked_malloc(sizeof(list_entry));
+	list_entry* entry = NEW(list_entry);
 	entry->next=next;
 	entry->val = val;
 	return entry;
@@ -41,7 +41,7 @@ static list_entry* create_entry(list_entry* next, void* val)
 static void* destroy_entry(list_entry* entry)
 {
 	void* val = entry->val;
-	checked_free(entry);
+	rfree(entry);
 	return val;
 }
 
@@ -62,7 +62,7 @@ void* stack_pop(stack* stk)
 void stack_destroy(stack* stk)
 {
 	while(stk->entries > 0) stack_pop(stk);
-	checked_free(stk);
+	rfree(stk);
 }
 
 stack* stack_reverse(stack* stk)
