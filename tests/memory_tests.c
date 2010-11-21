@@ -6,7 +6,7 @@
 
 static int re_stressor(char* re, char* str)
 {
-	unsigned int nc = 146;
+	unsigned int nc = 0;
 	mem_fail_count = nc;
 	unsigned int mem_usage_before = mem_usage;
 	unsigned int mem_usage_after = mem_usage;

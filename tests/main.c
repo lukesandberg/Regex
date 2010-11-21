@@ -44,7 +44,7 @@ int main(int argc, char**argv)
 	{
 		test_performance(1000l);
 	}
-	if(argc == 2 && argv[1][0] == 'm')
+	else if(argc == 2 && argv[1][0] == 'm')
 	{
 #ifndef MEM_TEST
 		printf("You must define MEM_TEST to run the memory tests\n");

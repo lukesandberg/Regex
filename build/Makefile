@@ -12,7 +12,7 @@ test: $(TESTNAME)
 	bash -c ./$(TESTNAME)
 
 valgrind: $(TESTNAME)
-	valgrind -v --log-fd=1 --suppressions=regex.supp ./$(TESTNAME) m | less
+	valgrind -v --log-fd=1 --suppressions=regex.supp --leak-check=full ./$(TESTNAME) m | less
 
 perf: $(TESTNAME)
 	bash -c "./$(TESTNAME) p"
