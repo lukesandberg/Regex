@@ -3,8 +3,8 @@
 
 #include <vm.h>
 #include <re.h>
-
-program* compile_regex(char* str, re_error* er, size_t* num_regs, size_t* num_capture_regs);
+#include <re_ast.h>
+regex* compile_regex(ast_node* tree);
 
 #endif
 

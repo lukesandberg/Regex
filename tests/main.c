@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "memory_tests.h"
+#include <util/util.h>
 
 void run_tests()
 {
@@ -19,7 +20,9 @@ void run_tests()
 	test_compiler();
 	test_matcher();
 	test_captures();
+#ifdef MEM_TEST
 	test_memory();
+#endif
 	mu_print_summary();
 }
 
@@ -30,6 +33,7 @@ static void print_usage(char* prog_name)
 	printf(usage_format, prog_name, "[t]", "unit tests");
 	printf(usage_format, prog_name, "f [count=inf]", "fuzz test");
 	printf(usage_format, prog_name, "p [count=1000]","performance tests");
+	printf(usage_format, prog_name, "m ","memory tests, for proper handling of low memory situations");
 	printf(usage_format, prog_name, "r <regex> <str>", "test if regex matches");
 	printf(usage_format, prog_name, "c <regex> <str>", "test for match and extract captures");
 }
@@ -39,6 +43,15 @@ int main(int argc, char**argv)
 	if(argc == 2 && argv[1][0] == 'p')
 	{
 		test_performance(1000l);
+	}
+	if(argc == 2 && argv[1][0] == 'm')
+	{
+#ifndef MEM_TEST
+		printf("You must define MEM_TEST to run the memory tests\n");
+#else
+		test_memory();
+		mu_print_summary();;
+#endif
 	}
 	else if(argc == 3 && argv[1][0] == 'p')
 	{

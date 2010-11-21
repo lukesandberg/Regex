@@ -4,7 +4,7 @@
 #include <util/util.h>
 #include <util/sparse_map.h>
 #include <thread_state.h>
-
+#include <re_parser.h>
 #include <capture_group.h>
 
 #include <ctype.h>
@@ -19,7 +19,6 @@ struct re_run_state
 	ts_cache* cache;
 };
 
-
 static int add_to_list(struct re_run_state *state, sparse_map* map, unsigned int pc_index, thread_state* ts, char* c)
 {
 	unsigned int reg_val = 0;
@@ -27,7 +26,7 @@ tailcall:
 	if(!sparse_map_contains(map, pc_index))
 	{
 		sparse_map_set(map, pc_index, ts);
-		instruction *pc = state->re->prog->code + pc_index;
+		instruction *pc = state->re->prog.code + pc_index;
 		switch(pc->op)
 		{
 			case I_JMP:
@@ -130,20 +129,19 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 	sparse_map *nlst = NULL;
 	thread_state* ts = NULL;
 	char* c = str;
-	program *prog = re->prog;
+	program *prog = &(re->prog);
 	size_t len = prog->size;
-	
-	clst = make_sparse_map(len);
-	if(clst == NULL)
-		goto end;
-	nlst = make_sparse_map(len);
-	if(nlst == NULL)
-		goto end;
 	struct re_run_state state;
 	state.re = re;
 	state.str = str;
 	state.cache = make_ts_cache(len);
 	if(state.cache == NULL)
+		goto end;
+	clst = make_sparse_map(len);
+	if(clst == NULL)
+		goto end;
+	nlst = make_sparse_map(len);
+	if(nlst == NULL)
 		goto end;
 	ts = make_thread_state(state.cache, re->num_registers);
 	if(ts == NULL)
@@ -206,9 +204,11 @@ int regex_matches(regex* re, char*str, capture_group** r_caps)
 			}
 			if(v > 0)//we did pass the test
 			{
-				if(add_to_list(&state, nlst, pc_index + 1, ts, c + 1) == 0)
-					//we ran out of memory... darn it
+				if(!add_to_list(&state, nlst, pc_index + 1, ts, c + 1))
+				{
+					rval = -1;//oom error
 					goto end;
+				}
 			}
 			else if(v == 0)
 			{
@@ -235,11 +235,12 @@ end:
 
 regex* regex_create(char* re_str, re_error* er)
 {
-	size_t num_regs, num_capture_regs;
-	program *prog = compile_regex(re_str, er, &num_regs, &num_capture_regs);
-	if(prog == NULL) 
-		return NULL;
-	regex * re = NEW(regex);
+	ast_node* tree = re_parse(re_str, er);
+	if(tree == NULL)
+	       	return NULL;//there was an error during parsing
+	
+	regex * re = compile_regex(tree);
+	free_node(tree);
 	if(re == NULL)
 	{
 		if(er != NULL)
@@ -247,18 +248,13 @@ regex* regex_create(char* re_str, re_error* er)
 			er->errno = E_OUT_OF_MEMORY;
 			er->position = -1;
 		}
-		rfree(prog);
 		return NULL;
-	}
-	re->num_registers = num_regs;
+	}	
 	re->src = re_str;
-	re->prog = prog;
-	re->num_capture_regs = num_capture_regs;
 	return re;
 }
 
 void regex_destroy(regex* re)
 {
-	rfree(re->prog);
 	rfree(re);
 }

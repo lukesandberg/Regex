@@ -33,10 +33,10 @@ basic-re:
 */
 
 #define parse_error(en, pos) do {\
-	if(er != NULL){\
-		er->errno = en;\
-		er->position = pos;\
-	}\
+		if(er != NULL){\
+			er->errno = en;\
+			er->position = pos;\
+		}\
 	}while(0)
 
 
@@ -193,52 +193,8 @@ static int handle_unary_op(struct parse_state* state, node_type type, re_error* 
 	}
 }
 
-static int multi_node_add(multi_node* m, ast_node* n)
-{
-	if(!linked_list_add_first(m->list, n))
-	{
-		free_node((ast_node*)m);
-		free_node(n);
-		return 0;
-	}
-	return 1;
-}
-
-static multi_node* make_multi_and_push(node_type multi_type, unsigned int count, ...)
-{
-	multi_node* m = make_multi(multi_type);
-	if(m == NULL)
-		return NULL;
-	
-	va_list args;
-	va_start(args, count);
-	ast_node* node;
-	int error = 0;
-	for(unsigned int i = 0; i < count; i++)
-	{
-		node = va_arg(args, ast_node*);
-		if(error)
-		{
-			free_node(node);
-		}
-		else if(!multi_node_add(m, node))
-		{
-			m = NULL;
-			error = 1;
-		}
-	}
-	va_end(args);
-	return m;
-}
-
 static int push_node(struct parse_state* state, ast_node* node, re_error* er)
 {
-	if(node == NULL)
-	{
-		parse_error(E_OUT_OF_MEMORY, -1);
-		return 0;
-	}
-
 	stack_token tok;
 	tok.type = NODE;
 	tok.v.node = node;
@@ -264,15 +220,20 @@ static inline int add_to_aggregation(struct parse_state* state, ast_node** singl
 	{
 		if(*agg == NULL)
 		{
-			*agg = make_multi_and_push(agg_type, 1, *single);
+			*agg = make_multi(agg_type);
 			if(*agg == NULL)
+			{
+				parse_error(E_OUT_OF_MEMORY, -1);
+				return 0;
+			}
+			if(!linked_list_add_first((*agg)->list, *single))
 			{
 				parse_error(E_OUT_OF_MEMORY, -1);
 				return 0;
 			}
 			*single = NULL;
 		}
-		if(!multi_node_add(*agg, node))
+		if(!linked_list_add_first((*agg)->list, node))
 		{
 			parse_error(E_OUT_OF_MEMORY, -1);
 			return 0;
@@ -292,7 +253,6 @@ static int is_alt_token(struct parse_state* state, re_error* er)
 		return 1;
 	return 0;
 }
-
 
 //-1 -> error 0 -> false 1->true
 static int is_end_token(struct parse_state* state, re_error* er, enum stop_criteria stop)
@@ -366,6 +326,8 @@ static int do_concat(struct parse_state* state, re_error *er, enum stop_criteria
 {
 	ast_node* single_node = NULL;
 	multi_node* cat = NULL;
+	ast_node* node = NULL;
+	ast_node* empty = NULL;
 	stack_token* tok_ptr = NULL;
 	stack_token tok;
 
@@ -394,8 +356,7 @@ static int do_concat(struct parse_state* state, re_error *er, enum stop_criteria
 		fat_stack_pop(state->tokens);//pop the previous item
 	}
 
-	ast_node* node;
-	ast_node* empty = NULL;
+	
 	if(cat != NULL)
 		node =  (ast_node*) cat;
 	else if(single_node != NULL)
@@ -461,6 +422,21 @@ static int handle_end(struct parse_state *state, ast_node** rval, re_error* er)
 	return 1;
 }
 
+static int push_new_node(struct parse_state* state, ast_node* node, re_error* er)
+{
+	if(node == NULL)
+	{
+		parse_error(E_OUT_OF_MEMORY, -1);
+		return 0;
+	}
+	if(!push_node(state, node, er))
+	{
+		free_node(node);
+		return 0;
+	}
+	return 1;	
+}
+
 //0 implies an error, 1 implies continue, 2 implies that we are done
 static int token_dispatch(struct parse_state* state, token* tok, re_error* er)
 {
@@ -468,7 +444,7 @@ static int token_dispatch(struct parse_state* state, token* tok, re_error* er)
 	switch(tok->type)
 	{
 		case CHAR_TOK:
-			v = push_node(state, (ast_node*) make_char(tok->v.char_value), er);
+			v = push_new_node(state, (ast_node*) make_char(tok->v.char_value), er);
 			break;
 		case PLUS_TOK:
 			v = handle_unary_op(state, PLUS, er);
@@ -489,16 +465,16 @@ static int token_dispatch(struct parse_state* state, token* tok, re_error* er)
 			v = handle_unary_op(state, NG_QMARK, er);
 			break;
 		case WILDCARD_TOK:
-			v = push_node(state, (ast_node*) make_node(WILDCARD), er);
+			v = push_new_node(state, (ast_node*) make_node(WILDCARD), er);
 			break;
 		case DIGIT_TOK:
-			v = push_node(state, make_node(DIGIT), er);
+			v = push_new_node(state, make_node(DIGIT), er);
 			break;
 		case WHITESPACE_TOK:
-			v = push_node(state, make_node(WHITESPACE), er);
+			v = push_new_node(state, make_node(WHITESPACE), er);
 			break;
 		case ALPHA_TOK:
-			v = push_node(state, make_node(ALPHA), er);
+			v = push_new_node(state, make_node(ALPHA), er);
 			break;
 		case LPAREN_TOK:
 			v = push_token(state, *tok, er);
@@ -562,6 +538,7 @@ static int init_stack(struct parse_state* state, re_error* er)
 	if(!fat_stack_push(state->tokens, &tok))
 	{
 		parse_error(E_OUT_OF_MEMORY, -1);
+		fat_stack_destroy(state->tokens);
 		return 0;
 	}
 	return 1;

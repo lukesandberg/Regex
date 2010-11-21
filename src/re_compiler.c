@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "regex.h"
 
 struct compile_state
 {
@@ -374,6 +375,7 @@ static size_t program_size(ast_node* n)
 	n->sub_prog_size = sz;
 	return sz;
 }
+
 static inline void modify_indices(instruction* inst, size_t len, size_t offset)
 {
 	for(unsigned int i = 0; i < len; i++)
@@ -391,31 +393,20 @@ static inline void modify_indices(instruction* inst, size_t len, size_t offset)
 	}
 }
 
-
-program* compile_regex(char* str, re_error* error, size_t *num_regs, size_t* num_capture_regs)
+regex* compile_regex(ast_node* tree)
 {
-	ast_node* tree = re_parse(str, error);
-	if(tree == NULL)
-	       	return NULL;//there was an error during parsing
-
 	tree = optimize(tree);
-
-	size_t sz = program_size(tree) + 1;//we add one for the final match inst
-	program* prog = NEWE(program, sz * sizeof(instruction));
 	
-	if(prog == NULL)
+	size_t sz = program_size(tree) + 1;//we add one for the final match inst
+	regex* re = NEWE(regex, sz * sizeof(instruction));
+	if(re == NULL)
 	{
-		if(error != NULL)
-		{
-			error->errno = E_OUT_OF_MEMORY;
-			error->position = -1;
-		}
-		goto end;
+		return NULL;
 	}
-	prog->size = sz;
+	re->prog.size = sz;
 	
 	struct compile_state state;
-	state.first = &(prog->code[0]);
+	state.first = &(re->prog.code[0]);
 	state.inst = state.first;
 	state.next_save_reg = 0;
 	state.max_loop_vars = 0;
@@ -423,14 +414,12 @@ program* compile_regex(char* str, re_error* error, size_t *num_regs, size_t* num
 
 	compile_recursive(&state, tree);
 	op(&state, I_MATCH);//last instruction should always be a match
-	*num_regs = state.next_save_reg  + state.max_loop_vars;
-	*num_capture_regs = state.next_save_reg;
+	re->num_registers = state.next_save_reg  + state.max_loop_vars;
+	re->num_capture_regs = state.next_save_reg;
 	
 	modify_indices(state.first, sz, state.next_save_reg);
 
-end:
-	free_node(tree);
-	return prog;
+	return re;
 }
 
 

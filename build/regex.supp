@@ -8,6 +8,13 @@
 	fun:add_to_list
 }
 {
+	lib-re-sparse-map-get-dense-value4
+	Memcheck:Value4
+	fun:get_dense
+	fun:sparse_map_contains
+	fun:add_to_list
+}
+{
 	lib-re-sparse-map-contains-cond
 	Memcheck:Cond
 	fun:sparse_map_contains

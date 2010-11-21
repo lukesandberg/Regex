@@ -7,11 +7,11 @@ static const char *error_messages[NUM_ERROR_CODES] =
 	"unexpected character token",
 	"unexpected token",
 	"unmatched paren",
+	"unexpected token",
 	"expected a token",
 	"missing operator argument",
 	"system out of memory",
 	"expected a number"
-	"unknown token"
 };
 static const char* unknown_error_msg = "unknown error code";
 const char* re_error_description(re_error er)

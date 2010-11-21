@@ -10,6 +10,7 @@ int match(char* re_str, char* str)
 {
 	re_error er;
 	regex* re = regex_create(re_str, &er);
+	//print_program(&(re->prog));
 	if(re == NULL) return 0;
 	int m = regex_matches(re, str, NULL);
 	regex_destroy(re);

@@ -205,7 +205,7 @@ static int TestCountedRepetitionSequence()
 
 void test_parser()
 {
-	printf("Testing parser\n");
+	printf("Testing Parser\n");
 	mu_run_test(TestEmpty);
 	mu_run_test(TestSingleMatch);
 	mu_run_test(TestSingleEscape);

@@ -123,7 +123,7 @@ static int TestCountedRepetitions()
 
 void test_lexer()
 {
-	printf("Testing lexer\n");
+	printf("Testing Lexer\n");
 	mu_run_test(TestSimple);
 	mu_run_test(TestOperators);
 	mu_run_test(TestCharClasses);
