@@ -1,11 +1,5 @@
 TODO
 
-* Change Alternation parsing from using the binary_node to the multi_node.  this should decrease parse tree depth for large alternations (e.g. "(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|...)").  also change alternation compilation step to handle this inline versus via recusion.
-
-* Add tests for non greedy operators, at this point they should perform identically to thier greedy cousins.
-
-* Add tests for OOM conditions (look into substituting an alternate malloc implementation that faults.
-
 * Add many many more matching tests, look into finding a library of example regexps with positive/negative strings to match
 
 -Luke Sandberg

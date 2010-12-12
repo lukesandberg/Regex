@@ -19,7 +19,7 @@ struct re_run_state
 	ts_cache* cache;
 	sparse_map* clst;
 	sparse_map* nlst;
-    capture_group** r_caps;
+	capture_group** r_caps;
 };
 
 static int add_to_list(struct re_run_state *state, sparse_map* map, unsigned int pc_index, thread_state* ts, char* c)

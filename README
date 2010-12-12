@@ -1,6 +1,10 @@
 This project was designed to learn more about finite state machines 
 and in general good c design.
 
+12/12/2010
+there are plenty of features yet to implement, bracket expressions, fast DFA searching and
+a variety of special cases for when we don't need submatch boundaries.
+
 11/18/2010
 A lot of refactoring has gone into the compiler and a little bit has gone into the 
 parser.  I will be focusing on simplifying the parser error handling and then the
