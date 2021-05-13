@@ -1,6 +1,6 @@
-#include <re.h>
-#include <capture_group.h>
-#include <util/util.h>
+#include "re.h"
+#include "capture_group.h"
+#include "util/util.h"
 char* cg_get_capture(capture_group* cg, unsigned int n, char**end)
 {
   *end = cg->regs[2*n+1];

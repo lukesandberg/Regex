@@ -1,6 +1,6 @@
 #include "sparse_map.h"
 #include <stdlib.h>
-#include <util/util.h>
+#include "util.h"
 struct _sparse_map_s
 {
 	void** values;

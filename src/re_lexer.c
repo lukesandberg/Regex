@@ -1,4 +1,4 @@
-#include <re_lexer.h>
+#include "re_lexer.h"
 #include <stdio.h>
 #include <ctype.h>
 

@@ -1,7 +1,7 @@
 #ifndef __RE_AST_H__
 #define __RE_AST_H__
 
-#include <util/linked_list.h>
+#include "util/linked_list.h"
 #include <stddef.h>
 
 typedef enum

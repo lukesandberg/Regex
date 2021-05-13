@@ -1,6 +1,6 @@
-#include <re_compiler.h>
-#include <re_parser.h>
-#include <util/util.h>
+#include "re_compiler.h"
+#include "re_parser.h"
+#include "util/util.h"
 
 #include <stdlib.h>
 #include <string.h>

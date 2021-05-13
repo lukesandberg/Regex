@@ -1,4 +1,4 @@
-#include <util/util.h>
+#include "util.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -64,7 +64,7 @@ void rfree(void *ptr)
 	ptr = ptr - sizeof(size_t);
 	mem_usage -= *((size_t*) ptr);
 #endif
-	free(ptr);
+//	free(ptr);
 }
 
 char* copy_cstring(const char* s)

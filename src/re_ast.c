@@ -1,7 +1,8 @@
 #include "re_ast.h"
 #include <stdlib.h>
-#include <util/util.h>
+#include "util/util.h"
 #include <assert.h>
+#include "util/linked_list.c"
 
 ast_node* make_node(node_type t)
 {

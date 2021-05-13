@@ -1,11 +1,12 @@
 #include "re_parser.h"
-#include "re_lexer.h"
+#include "re_lexer.c"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include "re_ast.c"
 
-#include <util/fat_stack.h>
-#include <util/util.h>
+#include "util/fat_stack.c"
+#include "util/util.h"
 /*
 This will parse our simple grammar
 

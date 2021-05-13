@@ -1,16 +1,16 @@
-#include <re_compiler.h>
-#include <re_ast.h>
+#include "re_compiler.c"
+#include "re_ast.h"
 
-#include <util/util.h>
-#include <util/sparse_map.h>
-#include <thread_state.h>
-#include <re_parser.h>
-#include <capture_group.h>
+#include "util/util.h"
+#include "util/sparse_map.c"
+#include "thread_state.h"
+#include "re_parser.c"
+#include "capture_group.c"
 
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include <regex.h>
+#include "regex.h"
 
 struct re_run_state
 {
@@ -197,7 +197,7 @@ static int process_char(struct re_run_state* state, char* c)
 				{
 					if(state->r_caps != NULL)
 					{
-						*(state->r_caps) = extract_capture_groups(state, ts);
+						(state->r_caps) = (capture_group **)extract_capture_groups(state, ts);
 						if(*(state->r_caps) == NULL) //extraction failed
 						{
 							return -1;

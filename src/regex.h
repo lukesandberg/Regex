@@ -1,8 +1,8 @@
 #ifndef __REGEX_H__
 #define __REGEX_H__
 #include <stdlib.h>
-#include <re.h>
-#include <vm.h>
+#include "re.h"
+#include "vm.h"
 
 struct regex_s
 {

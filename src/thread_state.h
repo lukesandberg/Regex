@@ -3,16 +3,16 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <util/util.h>
+#include "util/util.c"
 
-typedef struct _ts_s
+typedef struct ts_s
 {
 	size_t nref;
 	size_t sz;
 	unsigned int regs[];
 } thread_state;
 
-typedef struct _tsc_s
+typedef struct tsc_s
 {
 	size_t n;
 	thread_state* ts_cache[];
